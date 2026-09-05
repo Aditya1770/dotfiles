@@ -4,6 +4,10 @@ My Hyprland setup configuration files
 
 ## Screenshots
 
+<img width="1920" height="1200" alt="1" src="https://github.com/user-attachments/assets/0df16d0c-5b28-418f-a6f3-d75fe853a20c" />
+<img width="1920" height="1200" alt="2" src="https://github.com/user-attachments/assets/82f8e974-baba-4379-8c69-a71204f813de" />
+<img width="1920" height="1200" alt="3" src="https://github.com/user-attachments/assets/2c410ac0-d367-4b27-b72c-a142d2bb4010" />
+
 
 # Keybinds
 ## Applications and windows
