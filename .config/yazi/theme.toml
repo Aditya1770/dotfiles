@@ -1,0 +1,266 @@
+[app]
+overall = { bg = "#0A1114" }
+
+[mgr]
+cwd = { fg = "#e5c76b", bold = true }
+
+# Hide pane separators
+border_symbol = "│"
+border_style  = { fg = "#11191b", bg = "#0A1114" }
+
+find_keyword  = { fg = "#e5c76b", bold = true }
+find_position = { fg = "#67b0e8" }
+
+marker_copied   = { fg = "#8ccf7e", bg = "#8ccf7e" }
+marker_cut      = { fg = "#e57474", bg = "#e57474" }
+marker_marked   = { fg = "#e5c76b", bg = "#e5c76b" }
+marker_selected = { fg = "#67b0e8", bg = "#67b0e8" }
+
+count_copied   = { fg = "#0A1114", bg = "#8ccf7e" }
+count_cut      = { fg = "#0A1114", bg = "#e57474" }
+count_selected = { fg = "#0A1114", bg = "#67b0e8" }
+
+
+[indicator]
+parent = {
+    reversed = true
+}
+
+current = {
+    reversed = true
+}
+
+preview = { }
+
+# This is what removes the rounded/pill look
+padding = {
+    open = "█",
+    close = "█"
+}
+
+
+[filetype]
+rules = [
+    # Directories
+    { url = "*/", fg = "#67b0e8" },
+
+    # Images
+    { mime = "image/*", fg = "#6cbfbf" },
+
+    # Audio/video
+    { mime = "{audio,video}/*", fg = "#c47fd5" },
+
+    # Archives
+    { mime = "application/{zip,rar,7z*,tar,gzip,xz,zstd}", fg = "#e5c76b" },
+
+    # Executables
+    { url = "*", is = "exec", fg = "#8ccf7e" },
+
+    # Broken links
+    { url = "*", is = "orphan", fg = "#e57474" },
+
+    # Regular files
+    { url = "*", fg = "#dadada" },
+]
+
+
+[icon]
+
+globs = [
+    { url = "*/", text = "", fg = "#67b0e8" },
+]
+
+dirs = [
+    { name = "Desktop",   text = "", fg = "#67b0e8" },
+    { name = "Documents", text = "", fg = "#67b0e8" },
+    { name = "Downloads", text = "", fg = "#67b0e8" },
+    { name = "Music",     text = "", fg = "#67b0e8" },
+    { name = "Pictures",  text = "", fg = "#67b0e8" },
+    { name = "Public",    text = "", fg = "#67b0e8" },
+    { name = "Templates", text = "", fg = "#67b0e8" },
+    { name = "Videos",    text = "", fg = "#67b0e8" },
+
+    # Generic folders
+    { name = "*", text = "", fg = "#67b0e8" },
+]
+
+[tabs]
+active = {
+    fg = "#dadada",
+    bg = "#141B1E",
+    bold = false
+}
+
+inactive = {
+    fg = "#b3b9b8",
+    bg = "#0A1114"
+}
+
+sep_inner = {
+    open = "",
+    close = ""
+}
+
+sep_outer = {
+    open = "",
+    close = ""
+}
+
+
+[mode]
+normal_main = {
+    fg = "#0A1114",
+    bg = "#67b0e8",
+    bold = false
+}
+
+normal_alt = {
+    fg = "#67b0e8",
+    bg = "#141B1E"
+}
+
+select_main = {
+    fg = "#0A1114",
+    bg = "#8ccf7e"
+}
+
+select_alt = {
+    fg = "#8ccf7e",
+    bg = "#141B1E"
+}
+
+unset_main = {
+    fg = "#0A1114",
+    bg = "#e57474"
+}
+
+unset_alt = {
+    fg = "#e57474",
+    bg = "#141B1E"
+}
+
+
+[status]
+overall = {
+    fg = "#b3b9b8",
+    bg = "#0A1114"
+}
+
+sep_left = {
+    open = "",
+    close = ""
+}
+
+sep_right = {
+    open = "",
+    close = ""
+}
+
+perm_type  = { fg = "#67b0e8" }
+perm_read  = { fg = "#e57474" }
+perm_write = { fg = "#e5c76b" }
+perm_exec  = { fg = "#c47fd5" }
+perm_sep   = { fg = "#2d3437" }
+
+progress_label = {
+    fg = "#dadada",
+    bold = false
+}
+
+progress_normal = {
+    fg = "#67b0e8",
+    bg = "#141B1E"
+}
+
+progress_error = {
+    fg = "#e57474",
+    bg = "#141B1E"
+}
+
+
+[which]
+border = { fg = "#2d3437" }
+cand = { fg = "#67b0e8" }
+rest = { fg = "#dadada" }
+desc = { fg = "#b3b9b8" }
+
+separator = "  "
+separator_style = { fg = "#2d3437" }
+
+
+[confirm]
+border = { fg = "#2d3437" }
+title = { fg = "#67b0e8" }
+body = { fg = "#dadada" }
+
+btn_yes = {
+    fg = "#0A1114",
+    bg = "#8ccf7e"
+}
+
+btn_no = {
+    fg = "#0A1114",
+    bg = "#e57474"
+}
+
+
+[input]
+border = { fg = "#2d3437" }
+title = { fg = "#67b0e8" }
+value = { fg = "#dadada" }
+
+selected = {
+    fg = "#0A1114",
+    bg = "#dadada"
+}
+
+
+[pick]
+border = { fg = "#2d3437" }
+
+active = {
+    fg = "#0A1114",
+    bg = "#dadada"
+}
+
+inactive = {
+    fg = "#b3b9b8"
+}
+
+
+[cmp]
+border = { fg = "#2d3437" }
+
+icon_file    = ""
+icon_folder  = ""
+icon_command = ""
+
+active = {
+    fg = "#0A1114",
+    bg = "#dadada"
+}
+
+inactive = {
+    fg = "#b3b9b8"
+}
+
+
+[tasks]
+border = { fg = "#2d3437" }
+title = { fg = "#67b0e8" }
+
+hovered = {
+    fg = "#0A1114",
+    bg = "#dadada"
+}
+
+
+[help]
+border = { fg = "#2d3437" }
+chord = { fg = "#67b0e8" }
+action = { fg = "#dadada" }
+
+hovered = {
+    fg = "#0A1114",
+    bg = "#dadada"
+}

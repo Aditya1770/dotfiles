@@ -1,0 +1,44 @@
+singleton Theme 1.0 Theme.qml
+singleton Typography 1.0 Typography.qml
+singleton UserConfig 1.0 UserConfig.qml
+singleton PopupManager 1.0 PopupManager.qml
+singleton NetworkService 1.0 NetworkService.qml
+singleton BluetoothService 1.0 BluetoothService.qml
+singleton AudioService 1.0 AudioService.qml
+singleton BrightnessService 1.0 BrightnessService.qml
+singleton CalendarService 1.0 CalendarService.qml
+singleton NightLightService 1.0 NightLightService.qml
+singleton LauncherState 1.0 LauncherState.qml
+singleton NotificationService 1.0 NotificationService.qml
+singleton OsdState 1.0 OsdState.qml
+singleton ClipboardState 1.0 ClipboardState.qml
+singleton ClipboardService 1.0 ClipboardService.qml
+singleton EmojiFavorites 1.0 EmojiFavorites.qml
+singleton SystemStatsService 1.0 SystemStatsService.qml
+singleton WeatherService 1.0 WeatherService.qml
+singleton EventService 1.0 EventService.qml
+singleton HolidayService 1.0 HolidayService.qml
+Bar 1.0 Bar.qml
+BarText 1.0 BarText.qml
+IconText 1.0 IconText.qml
+Pill 1.0 Pill.qml
+Tray 1.0 Tray.qml
+Workspaces 1.0 Workspaces.qml
+BatteryModule 1.0 BatteryModule.qml
+CalendarModule 1.0 CalendarModule.qml
+LauncherModule 1.0 LauncherModule.qml
+LauncherOverlay 1.0 LauncherOverlay.qml
+NotificationCard 1.0 NotificationCard.qml
+NotificationToasts 1.0 NotificationToasts.qml
+OsdOverlay 1.0 OsdOverlay.qml
+ClipboardOverlay 1.0 ClipboardOverlay.qml
+ModulePopup 1.0 ModulePopup.qml
+SpotifyModule 1.0 SpotifyModule.qml
+QuickSettingsModule 1.0 QuickSettingsModule.qml
+QuickToggle 1.0 QuickToggle.qml
+SettingsSlider 1.0 SettingsSlider.qml
+SettingsHeader 1.0 SettingsHeader.qml
+WifiNetworkCard 1.0 WifiNetworkCard.qml
+BluetoothDeviceCard 1.0 BluetoothDeviceCard.qml
+PowerModule 1.0 PowerModule.qml
+WaveProgress 1.0 WaveProgress.qml

@@ -1,0 +1,87 @@
+# ============================================================
+# Dim Everforest Fish Theme
+# Background: #111517
+# ============================================================
+
+# Syntax
+
+fish_color_normal D3C6AA
+
+# Commands - dim aqua
+fish_color_command 729E8F
+
+# Keywords - dim purple
+fish_color_keyword A97E94
+
+# Strings - dim green
+fish_color_quote 8FA46F
+
+# Redirections - dim orange
+fish_color_redirection B57A62
+
+# Command terminators
+fish_color_end A99764
+
+# Errors - dim red
+fish_color_error C46C6E
+
+# Arguments
+fish_color_param B9B09B
+
+# Comments
+fish_color_comment 626D64
+
+# Selection
+fish_color_selection D3C6AA --background=374145
+
+# Search
+fish_color_search_match D3C6AA --background=384B55
+
+# Operators - dim blue
+fish_color_operator 6B9993
+
+# Escapes
+fish_color_escape B57A62
+
+# Autosuggestions
+fish_color_autosuggestion 58625C
+
+# Cancel
+fish_color_cancel C46C6E --reverse
+
+# Options
+fish_color_option 6B9993
+
+fish_color_history_current --bold
+fish_color_status C46C6E
+fish_color_valid_path --underline
+
+
+# Prompt-related Fish colors
+# These DON'T override Starship's own colors.
+
+fish_color_cwd 8FA46F
+fish_color_cwd_root C46C6E
+fish_color_host 6B9993
+fish_color_host_remote B57A62
+fish_color_user 729E8F
+
+
+# Completion pager
+
+fish_pager_color_progress 626D64
+fish_pager_color_background
+
+fish_pager_color_prefix 729E8F
+fish_pager_color_completion B9B09B
+fish_pager_color_description 626D64
+
+fish_pager_color_selected_background --background=374145
+fish_pager_color_selected_prefix 8FA46F
+fish_pager_color_selected_completion D3C6AA
+fish_pager_color_selected_description 859289
+
+fish_pager_color_secondary_background
+fish_pager_color_secondary_prefix 729E8F
+fish_pager_color_secondary_completion B9B09B
+fish_pager_color_secondary_description 626D64
