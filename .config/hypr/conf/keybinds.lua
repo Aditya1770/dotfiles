@@ -103,17 +103,17 @@ hl.bind(mainMod .. " + mouse:273",
 
 hl.bind(
     "XF86AudioRaiseVolume",
-    hl.dsp.exec_cmd("qs -c aditya-shell ipc call osd volumeUp")
+    hl.dsp.exec_cmd("qs -c fianchetto ipc call osd volumeUp")
 )
 
 hl.bind(
     "XF86AudioLowerVolume",
-    hl.dsp.exec_cmd("qs -c aditya-shell ipc call osd volumeDown")
+    hl.dsp.exec_cmd("qs -c fianchetto ipc call osd volumeDown")
 )
 
 hl.bind(
     "XF86AudioMute",
-    hl.dsp.exec_cmd("qs -c aditya-shell ipc call osd volumeMute")
+    hl.dsp.exec_cmd("qs -c fianchetto ipc call osd volumeMute")
 )
 
 hl.bind("XF86AudioPlay",
@@ -142,19 +142,19 @@ hl.bind(mainMod .. " + Print",
 
 hl.bind(
     "XF86MonBrightnessUp",
-    hl.dsp.exec_cmd("qs -c aditya-shell ipc call osd brightnessUp")
+    hl.dsp.exec_cmd("qs -c fianchetto ipc call osd brightnessUp")
 )
 
 hl.bind(
     "XF86MonBrightnessDown",
-    hl.dsp.exec_cmd("qs -c aditya-shell ipc call osd brightnessDown")
+    hl.dsp.exec_cmd("qs -c fianchetto ipc call osd brightnessDown")
 )
 
 -- Clipboard
 
 hl.bind("SUPER + V",
     hl.dsp.exec_cmd(
-        "qs -c aditya-shell ipc call picker clipboard"
+        "qs -c fianchetto ipc call picker clipboard"
     ))
 
 
@@ -185,7 +185,7 @@ hl.bind(mainMod .. " + SHIFT + M",
     hl.dsp.exec_cmd("sh /home/aditya/scripts/mouse"))
 
 hl.bind(mainMod .. " + period",
-    hl.dsp.exec_cmd("qs -c aditya-shell ipc call picker emoji"))
+    hl.dsp.exec_cmd("qs -c fianchetto ipc call picker emoji"))
 
 hl.bind("SUPER + R", hl.dsp.submap("resize"))
 
