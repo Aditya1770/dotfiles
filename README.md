@@ -86,7 +86,7 @@ My Hyprland setup configuration files
 | `Super + Print Screen` | Copy full-screen screenshot        |
 | `Super + Shift + C`    | Pick a colour and copy its value   |
 
-## Fianchetto and utilities
+### Shell and utilities
 
 | Keybind             | Action                            |
 | ------------------- | --------------------------------- |
