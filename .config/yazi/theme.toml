@@ -4,7 +4,6 @@ overall = { bg = "#0A1114" }
 [mgr]
 cwd = { fg = "#e5c76b", bold = true }
 
-# Hide pane separators
 border_symbol = "│"
 border_style  = { fg = "#11191b", bg = "#0A1114" }
 
@@ -32,7 +31,7 @@ current = {
 
 preview = { }
 
-# This is what removes the rounded/pill look
+
 padding = {
     open = "█",
     close = "█"
@@ -79,8 +78,6 @@ dirs = [
     { name = "Public",    text = "", fg = "#67b0e8" },
     { name = "Templates", text = "", fg = "#67b0e8" },
     { name = "Videos",    text = "", fg = "#67b0e8" },
-
-    # Generic folders
     { name = "*", text = "", fg = "#67b0e8" },
 ]
 
