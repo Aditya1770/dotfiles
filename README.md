@@ -19,7 +19,7 @@ My Hyprland setup configuration files
 | `Super + B`              | Open Brave                     |
 | `Super + E`              | Open Nemo                      |
 | `Super + Shift + E`      | Open floating Nemo             |
-| `Super + D`              | Open Fianchetto launcher       |
+| `Super + D`              | Open the shell launcher        |
 | `Super + Q`              | Close active window            |
 | `Super + Space`          | Toggle floating                |
 | `Super + F`              | Toggle fullscreen              |
