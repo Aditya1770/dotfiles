@@ -9,6 +9,7 @@ Rectangle {
     property bool passwordEditorExpanded: false
     signal passwordEditorRequested()
     signal passwordEditorClosed()
+    readonly property bool enterprise: NetworkService.isEnterprise(network)
 
     readonly property string signalIcon: network.signalStrength > 0.75 ? "󰤨"
         : network.signalStrength > 0.5 ? "󰤥"
@@ -17,10 +18,12 @@ Rectangle {
         : network.stateChanging ? "Connecting…"
         : network.known ? "Saved" : "Available"
 
-    height: passwordEditorExpanded ? 104 : 52
+    implicitHeight: passwordEditorExpanded ? (enterprise && !network.known ? 153 : 104) : 52
+    height: implicitHeight
     radius: 11
-    color: network.connected ? Theme.surfaceHover : Theme.background
-    border.width: 0
+    color: network.connected || passwordEditorExpanded ? Theme.surfaceHover : Theme.background
+    border.width: passwordEditorExpanded ? 1 : 0
+    border.color: Theme.blue
     clip: true
 
     Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
@@ -104,6 +107,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 34
             visible: root.passwordEditorExpanded && !root.network.connected
+                && !root.network.known && !root.enterprise
             spacing: 7
 
             Rectangle {
@@ -125,7 +129,7 @@ Rectangle {
                     font.weight: Typography.textWeight
                     echoMode: reveal.show ? TextInput.Normal : TextInput.Password
                     passwordCharacter: "•"
-                    onAccepted: { root.network.connectWithPsk(text); root.passwordEditorClosed() }
+                    onAccepted: root.submitPersonal()
                     onVisibleChanged: if (visible) forceActiveFocus()
                 }
                 IconText {
@@ -141,15 +145,97 @@ Rectangle {
             }
             Rectangle {
                 Layout.preferredWidth: 34; Layout.preferredHeight: 34; radius: 9; color: Theme.surface
-                IconText { anchors.centerIn: parent; text: "󰅖"; color: Theme.red }
+                IconText { anchors.centerIn: parent; text: "󰅖"; color: Theme.pastelRose }
                 MouseArea { anchors.fill: parent; onClicked: root.passwordEditorClosed() }
             }
             Rectangle {
                 Layout.preferredWidth: 34; Layout.preferredHeight: 34; radius: 9; color: Theme.surface
-                IconText { anchors.centerIn: parent; text: "󰄬"; color: Theme.green }
-                MouseArea { anchors.fill: parent; onClicked: { root.network.connectWithPsk(passwordInput.text); root.passwordEditorClosed() } }
+                IconText { anchors.centerIn: parent; text: "󰄬"; color: Theme.pastelMint }
+                MouseArea { anchors.fill: parent; enabled: !root.network.stateChanging; onClicked: root.submitPersonal() }
             }
         }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            visible: root.passwordEditorExpanded && !root.network.connected && root.enterprise && !root.network.known
+            spacing: 6
+
+            Rectangle {
+                Layout.fillWidth: true; Layout.preferredHeight: 34; radius: 9
+                color: Theme.surface; border.width: 1
+                border.color: identityInput.activeFocus ? Theme.blue : Theme.border
+                TextInput {
+                    id: identityInput
+                    anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 10
+                    verticalAlignment: TextInput.AlignVCenter
+                    color: Theme.text; font.family: Typography.textFamily; font.pixelSize: Typography.textSize
+                    font.weight: Typography.textWeight
+                    onAccepted: enterprisePassword.forceActiveFocus()
+                }
+                BarText {
+                    anchors.left: parent.left; anchors.leftMargin: 10; anchors.verticalCenter: parent.verticalCenter
+                    text: "User ID / identity"; color: Theme.muted; visible: identityInput.text.length === 0
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; Layout.preferredHeight: 34; spacing: 7
+                Rectangle {
+                    Layout.fillWidth: true; Layout.preferredHeight: 34; radius: 9
+                    color: Theme.surface; border.width: 1
+                    border.color: enterprisePassword.activeFocus ? Theme.blue : Theme.border
+                    TextInput {
+                        id: enterprisePassword
+                        anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 38
+                        verticalAlignment: TextInput.AlignVCenter
+                        color: Theme.text; font.family: Typography.textFamily; font.pixelSize: Typography.textSize
+                        font.weight: Typography.textWeight
+                        echoMode: enterpriseReveal.show ? TextInput.Normal : TextInput.Password
+                        passwordCharacter: "•"
+                        onAccepted: root.submitEnterprise()
+                    }
+                    BarText {
+                        anchors.left: parent.left; anchors.leftMargin: 10; anchors.verticalCenter: parent.verticalCenter
+                        text: "Password"; color: Theme.muted; visible: enterprisePassword.text.length === 0
+                    }
+                    IconText {
+                        id: enterpriseReveal
+                        property bool show: false
+                        anchors.right: parent.right; anchors.rightMargin: 10; anchors.verticalCenter: parent.verticalCenter
+                        text: show ? "󰈈" : "󰈉"; color: Theme.muted
+                        MouseArea { anchors.fill: parent; anchors.margins: -6; onClicked: enterpriseReveal.show = !enterpriseReveal.show }
+                    }
+                }
+                Rectangle {
+                    Layout.preferredWidth: 34; Layout.preferredHeight: 34; radius: 9; color: Theme.surface
+                    IconText { anchors.centerIn: parent; text: "󰅖"; color: Theme.pastelRose }
+                    MouseArea { anchors.fill: parent; onClicked: root.passwordEditorClosed() }
+                }
+                Rectangle {
+                    Layout.preferredWidth: 34; Layout.preferredHeight: 34; radius: 9
+                    color: Theme.surface; opacity: NetworkService.enterpriseConnecting ? 0.5 : 1
+                    IconText { anchors.centerIn: parent; text: NetworkService.enterpriseConnecting ? "󰑐" : "󰄬"; color: Theme.pastelMint }
+                    MouseArea { anchors.fill: parent; enabled: !NetworkService.enterpriseConnecting; onClicked: root.submitEnterprise() }
+                }
+            }
+
+            BarText {
+                Layout.fillWidth: true; visible: NetworkService.enterpriseError !== ""
+                    && NetworkService.enterpriseNetworkName === root.network.name
+                text: NetworkService.enterpriseError; color: Theme.red; font.pixelSize: 9; elide: Text.ElideRight
+            }
+        }
+    }
+
+    function submitEnterprise() {
+        if (!identityInput.text.trim() || !enterprisePassword.text) return
+        NetworkService.connectEnterprise(root.network, identityInput.text, enterprisePassword.text)
+    }
+
+    function submitPersonal() {
+        if (!passwordInput.text || root.network.stateChanging) return
+        NetworkService.pauseScanning()
+        root.network.connectWithPsk(passwordInput.text)
     }
 
     MouseArea {
@@ -172,5 +258,16 @@ Rectangle {
     Connections {
         target: root.network
         function onConnectionFailed(reason) { root.passwordEditorRequested() }
+        function onConnectedChanged() {
+            if (root.network.connected) root.passwordEditorClosed()
+        }
+    }
+    Connections {
+        target: NetworkService
+        function onEnterpriseConnectionFinished(networkName, success) {
+            if (networkName !== root.network.name) return
+            if (success) root.passwordEditorClosed()
+            else root.passwordEditorRequested()
+        }
     }
 }

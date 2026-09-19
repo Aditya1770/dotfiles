@@ -10,15 +10,27 @@ PopupWindow {
     property bool presented: false
     property double openedAt: 0
     property Item focusTarget: null
+    readonly property string barEdge: ShellSettings.barPosition
+    readonly property bool verticalBar: barEdge === "left" || barEdge === "right"
+    // Compact vertical modules have different widths but are centered in the
+    // same bar. Include the unused half-width so every popup begins exactly
+    // 10px beyond the visible bar edge rather than 10px beyond its pill.
+    readonly property real verticalEdgeInset: verticalBar
+        ? Math.max(0, (Theme.sideBarWidth - anchorItem.width) / 2) : 0
 
     anchor.item: anchorItem
-    // Explicit point below the pill: centered horizontally with a fixed gap.
-    anchor.rect.x: Math.round(anchorItem.width / 2)
-    anchor.rect.y: anchorItem.height + 10
+    anchor.rect.x: barEdge === "left" ? anchorItem.width + verticalEdgeInset + 10
+        : barEdge === "right" ? -verticalEdgeInset - 10 : Math.round(anchorItem.width / 2)
+    anchor.rect.y: barEdge === "top" ? anchorItem.height + 10
+        : barEdge === "bottom" ? -10 : Math.round(anchorItem.height / 2)
     anchor.rect.width: 1
     anchor.rect.height: 1
-    anchor.edges: Edges.Top
-    anchor.gravity: Edges.Bottom
+    anchor.edges: barEdge === "bottom" ? Edges.Bottom
+        : barEdge === "left" ? Edges.Left
+        : barEdge === "right" ? Edges.Right : Edges.Top
+    anchor.gravity: barEdge === "bottom" ? Edges.Top
+        : barEdge === "left" ? Edges.Right
+        : barEdge === "right" ? Edges.Left : Edges.Bottom
     color: "transparent"
 
     onVisibleChanged: {
@@ -68,10 +80,14 @@ PopupWindow {
         opacity: root.presented ? 1 : 0
         scale: root.presented ? 1 : 0.985
         transform: Translate {
-            y: root.presented ? 0 : -8
+            x: root.presented ? 0 : root.barEdge === "left" ? -8 : root.barEdge === "right" ? 8 : 0
+            y: root.presented ? 0 : root.barEdge === "top" ? -8 : root.barEdge === "bottom" ? 8 : 0
+            Behavior on x { NumberAnimation { duration: 190; easing.type: Easing.OutCubic } }
             Behavior on y { NumberAnimation { duration: 190; easing.type: Easing.OutCubic } }
         }
-        transformOrigin: Item.Top
+        transformOrigin: root.barEdge === "bottom" ? Item.Bottom
+            : root.barEdge === "left" ? Item.Left
+            : root.barEdge === "right" ? Item.Right : Item.Top
         radius: Theme.popupRadius
         color: Theme.surface
         border.width: 0

@@ -4,8 +4,11 @@ import Quickshell
 
 Pill {
     id: root
+    property bool compact: false
+    horizontalPadding: compact ? 6 : 10
     SystemClock { id: clock; precision: SystemClock.Seconds }
-    BarText { text: Qt.formatDateTime(clock.date, "HH:mm") }
+    IconText { visible: root.compact; text: "󰥔"; color: Theme.pastelSky }
+    BarText { visible: !root.compact; text: Qt.formatDateTime(clock.date, "HH:mm") }
 
     readonly property var nextEvent: {
         const revision = EventService.revision
@@ -39,8 +42,11 @@ Pill {
         id: popup
         anchorItem: root
         implicitWidth: 390
-        implicitHeight: 555
+        implicitHeight: 555 + (root.selectedEvents.length > 0 ? 46 : 0)
         focusTarget: eventInput
+        Behavior on implicitHeight {
+            NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -69,7 +75,7 @@ Pill {
                         anchors.fill: parent
                         anchors.margins: 11
                         layoutDirection: Qt.RightToLeft
-                        IconText { text: WeatherService.icon; color: Theme.blue; font.pixelSize: 25 }
+                        IconText { text: WeatherService.icon; color: Theme.pastelButter; font.pixelSize: 25 }
                         ColumnLayout {
                             Layout.fillWidth: true; spacing: 0
                             BarText {
@@ -96,12 +102,24 @@ Pill {
                 Layout.preferredHeight: 42
                 radius: 14
                 color: Theme.surfaceHover
-                RowLayout {
+                Item {
                     anchors.fill: parent
-                    anchors.leftMargin: 12; anchors.rightMargin: 12; spacing: 9
-                    IconText { text: "󰃭"; color: Theme.blue }
+                    IconText {
+                        id: upcomingIcon
+                        anchors.left: parent.left
+                        anchors.leftMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 16
+                        text: "󰃭"; color: Theme.pastelLilac
+                        horizontalAlignment: Text.AlignHCenter
+                    }
                     ColumnLayout {
-                        Layout.fillWidth: true; spacing: 0
+                        anchors.left: upcomingIcon.right
+                        anchors.leftMargin: 5
+                        anchors.right: parent.right
+                        anchors.rightMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 0
                         BarText { text: root.nextEvent ? root.nextEvent.title : "No upcoming events"; elide: Text.ElideRight }
                         BarText {
                             visible: root.nextEvent !== null
@@ -138,20 +156,20 @@ Pill {
             }
 
             GridLayout {
-                columns: 7; columnSpacing: 2; Layout.fillWidth: true
+                columns: 7; columnSpacing: 2; uniformCellWidths: true; Layout.fillWidth: true
                 Repeater {
                     model: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
                     BarText {
                         required property string modelData
                         text: modelData; color: Theme.muted
-                        Layout.preferredWidth: 47
+                        Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter; font.pixelSize: 10
                     }
                 }
             }
 
             GridLayout {
-                columns: 7; rows: 6; columnSpacing: 2; rowSpacing: 2
+                columns: 7; rows: 6; columnSpacing: 2; rowSpacing: 2; uniformCellWidths: true
                 Layout.fillWidth: true; Layout.preferredHeight: 218
                 Repeater {
                     model: CalendarService.daysModel

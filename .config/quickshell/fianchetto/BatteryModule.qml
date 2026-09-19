@@ -4,6 +4,8 @@ import Quickshell.Services.UPower
 
 Pill {
     id: root
+    property bool compact: false
+    horizontalPadding: compact ? 6 : 10
     readonly property var battery: UPower.displayDevice
     readonly property int percent: Math.round(battery.percentage * 100)
     readonly property bool full: battery.state === UPowerDeviceState.FullyCharged
@@ -32,7 +34,7 @@ Pill {
 
     RowLayout {
         IconText { text: root.batteryIcon(); color: root.externallyPowered ? Theme.green : Theme.text }
-        BarText { text: root.percent + "%"; color: root.externallyPowered ? Theme.green : Theme.text }
+        BarText { visible: !root.compact; text: root.percent + "%"; color: root.externallyPowered ? Theme.green : Theme.text }
     }
 
     onClicked: popup.visible = !popup.visible
@@ -41,7 +43,7 @@ Pill {
         id: popup
         anchorItem: root
         implicitWidth: 300
-        implicitHeight: 172
+        implicitHeight: 180
 
         ColumnLayout {
             anchors.fill: parent
@@ -50,44 +52,34 @@ Pill {
 
             RowLayout {
                 Layout.fillWidth: true
-                Rectangle {
-                    Layout.preferredWidth: 40
-                    Layout.preferredHeight: 40
-                    radius: 14
-                    color: Theme.surfaceHover
-                    IconText {
-                        anchors.centerIn: parent
-                        text: root.batteryIcon()
-                        color: root.externallyPowered ? Theme.green : Theme.blue
-                        font.pixelSize: 19
-                    }
+                spacing: 7
+                IconText {
+                    text: root.batteryIcon()
+                    color: root.externallyPowered ? Theme.green : Theme.text
+                    font.pixelSize: 13
                 }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 1
-                    BarText {
-                        text: root.full ? "Fully charged"
-                            : root.charging ? "Charging"
-                            : UPower.onBattery ? "On battery" : "Plugged in"
-                        font.pixelSize: 15
-                    }
-                    BarText {
-                        text: root.full ? "Connected to power"
-                            : root.charging
-                            ? root.formatDuration(root.battery.timeToFull) + " until full"
-                            : UPower.onBattery
-                                ? root.formatDuration(root.battery.timeToEmpty) + " remaining"
-                                : "Not charging"
-                        color: Theme.muted
-                        font.pixelSize: 11
-                        font.weight: Font.Normal
-                    }
-                }
+                BarText { text: "Battery"; font.pixelSize: 13 }
+                Item { Layout.fillWidth: true }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 9
                 BarText {
                     text: root.percent + "%"
-                    color: root.externallyPowered ? Theme.green : Theme.blue
-                    font.pixelSize: 15
+                    color: root.externallyPowered ? Theme.green : Theme.text
+                    font.pixelSize: 28
                 }
+                BarText {
+                    text: root.full ? "Fully charged"
+                        : root.charging ? "Charging"
+                        : UPower.onBattery ? "On battery" : "Plugged in"
+                    color: Theme.muted
+                    font.pixelSize: 12
+                    font.weight: Font.Normal
+                    Layout.alignment: Qt.AlignVCenter
+                }
+                Item { Layout.fillWidth: true }
             }
 
             Rectangle {
@@ -99,7 +91,7 @@ Pill {
                     width: parent.width * Math.max(0, Math.min(1, root.battery.percentage))
                     height: parent.height
                     radius: parent.radius
-                    color: root.externallyPowered ? Theme.green : Theme.blue
+                    color: root.externallyPowered ? Theme.green : Theme.text
                     Behavior on width { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
                 }
             }

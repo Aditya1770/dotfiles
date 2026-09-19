@@ -11,13 +11,14 @@ Rectangle {
     property bool expanded: false
     property bool embedded: false
     property bool hovered: toggleMouse.containsMouse
+    property color accent: Theme.pastelSky
     signal toggled()
     signal detailsRequested()
 
     implicitHeight: 42
     implicitWidth: 145
     radius: 21
-    color: embedded ? "transparent" : (active ? Theme.blue : (hovered ? Theme.border : Theme.surfaceHover))
+    color: embedded ? "transparent" : (active ? root.accent : (hovered ? Theme.border : Theme.surfaceHover))
     border.width: 0
 
     RowLayout {
@@ -26,7 +27,7 @@ Rectangle {
         anchors.rightMargin: 8
         spacing: 8
 
-        IconText { text: root.icon; color: root.active ? Theme.background : Theme.text }
+        IconText { text: root.icon; color: root.active ? Theme.background : root.accent }
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 0

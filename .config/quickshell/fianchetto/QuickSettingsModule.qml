@@ -1,20 +1,44 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Services.UPower
 import Quickshell.Widgets
 
 Pill {
     id: root
-    horizontalPadding: 10
+    horizontalPadding: compact ? 9 : 10
+    property bool compact: false
+    implicitHeight: compact ? statusGrid.implicitHeight + 12 : Theme.pillHeight
     property string page: "main"
     property string expandedNetwork: ""
+    readonly property bool airplaneMode: !NetworkService.enabled && (!BluetoothService.available || !BluetoothService.enabled)
+    readonly property bool powerProfilesVisible: PowerProfileService.supported && ShellSettings.showPowerProfiles
+    readonly property int mainPopupHeight: {
+        let height = 35 + 148
+        if (ShellSettings.showQuickToggles) height += 10 + 42
+        if (ShellSettings.showSliders) height += 10 + 118
+        if (powerProfilesVisible) height += 10 + 58
+        if (ShellSettings.showSystemStats) height += 10 + 72 + 10 + 55
+        return height
+    }
 
-    RowLayout {
-        spacing: 9
-        IconText { text: AudioService.muted || AudioService.volume === 0 ? "󰖁" : "󰕾"; color: Theme.blue }
-        IconText { text: "󰖩"; color: NetworkService.enabled ? Theme.blue : Theme.muted }
-        IconText { text: "󰂯"; color: BluetoothService.enabled ? Theme.blue : Theme.muted }
+    function toggleAirplaneMode() {
+        if (!root.airplaneMode) {
+            if (NetworkService.enabled) NetworkService.toggleWifi()
+            if (BluetoothService.enabled) BluetoothService.togglePower()
+        } else {
+            if (NetworkService.hardwareEnabled && !NetworkService.enabled) NetworkService.toggleWifi()
+            if (BluetoothService.available && !BluetoothService.enabled) BluetoothService.togglePower()
+        }
+    }
+
+    GridLayout {
+        id: statusGrid
+        columns: root.compact ? 1 : 3
+        rowSpacing: root.compact ? 7 : 0
+        columnSpacing: root.compact ? 0 : 9
+        IconText { text: AudioService.muted || AudioService.volume === 0 ? "󰖁" : "󰕾"; color: Theme.pastelPeach }
+        IconText { text: NetworkService.signalIcon; color: NetworkService.connectedNetwork ? Theme.pastelSky : Theme.muted }
+        IconText { text: "󰂯"; color: BluetoothService.enabled ? Theme.pastelLilac : Theme.muted }
     }
 
     onClicked: {
@@ -28,9 +52,12 @@ Pill {
         id: popup
         anchorItem: root
         implicitWidth: 400
-        implicitHeight: root.page === "main" ? 510
+        implicitHeight: root.page === "main" ? root.mainPopupHeight
             : root.page === "notifications" ? 480
             : root.page === "nightlight" ? 210 : 420
+        Behavior on implicitHeight {
+            NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+        }
         onVisibleChanged: if (!visible) {
             root.page = "main"
             root.expandedNetwork = ""
@@ -53,12 +80,15 @@ Pill {
                 anchors.margins: Theme.popupPadding
                 spacing: 10
 
-                RowLayout {
+                GridLayout {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 148
-                    spacing: 9
+                    columns: 2
+                    rowSpacing: 9
+                    columnSpacing: 9
 
                     ColumnLayout {
+                        Layout.column: ShellSettings.profileOnLeft ? 1 : 0
                         Layout.fillWidth: true
                         Layout.preferredWidth: 174
                         Layout.fillHeight: true
@@ -67,11 +97,12 @@ Pill {
                         QuickToggle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            icon: "󰖩"
+                            icon: NetworkService.signalIcon
                             label: "Wi-Fi"
                             subtitle: !NetworkService.enabled ? "Off"
                                 : NetworkService.connectedNetwork ? NetworkService.connectedNetwork.name : "Not connected"
                             active: NetworkService.enabled
+                            accent: Theme.pastelSky
                             showArrow: true
                             onToggled: NetworkService.toggleWifi()
                             onDetailsRequested: { root.page = "wifi"; NetworkService.scanNow() }
@@ -87,82 +118,66 @@ Pill {
                                         || BluetoothService.connectedDevices[0].deviceName || "Connected")
                                     : "Not connected"
                             active: BluetoothService.enabled
+                            accent: Theme.pastelLilac
                             showArrow: true
                             onToggled: BluetoothService.togglePower()
                             onDetailsRequested: { root.page = "bluetooth"; BluetoothService.scanNow() }
                         }
                     }
 
-                    Rectangle {
+                    GridLayout {
+                        Layout.column: ShellSettings.profileOnLeft ? 0 : 1
                         Layout.fillWidth: true
                         Layout.preferredWidth: 174
                         Layout.fillHeight: true
-                        radius: 24
-                        color: Theme.surfaceHover
-                        border.width: 0
+                        columns: 2
+                        rowSpacing: 9
+                        columnSpacing: 9
 
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 13
-                            spacing: 7
-
-                            ClippingRectangle {
-                                Layout.preferredWidth: 54
-                                Layout.preferredHeight: 54
-                                Layout.alignment: Qt.AlignHCenter
+                        Repeater {
+                            model: [
+                                { key: "mute", label: AudioService.microphoneMuted ? "Mic muted" : "Mute mic", icon: AudioService.microphoneMuted ? "󰍭" : "󰍬", accent: Theme.pastelButter },
+                                { key: "settings", label: "Settings", icon: "󰒓", accent: Theme.pastelLilac },
+                                { key: "airplane", label: "Airplane", icon: "󰀝", accent: Theme.pastelSky },
+                                { key: "screenshot", label: "Screenshot", icon: "󰄀", accent: Theme.pastelMint }
+                            ]
+                            Rectangle {
+                                required property var modelData
+                                readonly property bool active: modelData.key === "mute" ? AudioService.microphoneMuted
+                                    : modelData.key === "airplane" ? root.airplaneMode : false
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
                                 radius: 18
-                                color: Theme.surface
-
-                                Image {
-                                    id: profileImage
-                                    anchors.fill: parent
-                                    source: "file://" + Quickshell.env("HOME") + "/.face"
-                                    fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true
-                                    smooth: true
+                                color: active ? modelData.accent
+                                    : actionMouse.containsMouse ? Theme.border : Theme.surfaceHover
+                                ColumnLayout {
+                                    anchors.centerIn: parent; spacing: 3
+                                    IconText { Layout.alignment: Qt.AlignHCenter; text: modelData.icon; color: active ? Theme.background : modelData.accent; font.pixelSize: 18 }
+                                    BarText { Layout.alignment: Qt.AlignHCenter; text: modelData.label; color: active ? Theme.background : Theme.text; font.pixelSize: 10 }
                                 }
-                                IconText {
-                                    anchors.centerIn: parent
-                                    visible: profileImage.status !== Image.Ready
-                                    text: "󰀄"
-                                    color: Theme.blue
-                                    font.pixelSize: 25
+                                MouseArea {
+                                    id: actionMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (modelData.key === "mute") AudioService.toggleMicrophoneMute()
+                                        else if (modelData.key === "airplane") root.toggleAirplaneMode()
+                                        else if (modelData.key === "screenshot") {
+                                            popup.visible = false
+                                            Quickshell.execDetached(["grimblast", "copy", "area"])
+                                        } else {
+                                            popup.visible = false
+                                            Qt.callLater(function() { SettingsWindow.showPage("control") })
+                                        }
+                                    }
                                 }
-                            }
-                            BarText {
-                                Layout.fillWidth: true
-                                horizontalAlignment: Text.AlignHCenter
-                                text: Quickshell.env("USER") || "User"
-                                font.pixelSize: 16
-                                elide: Text.ElideRight
-                            }
-                            BarText {
-                                Layout.fillWidth: true
-                                horizontalAlignment: Text.AlignHCenter
-                                text: Qt.formatDate(new Date(), "ddd, d MMM")
-                                color: Theme.muted
-                                font.pixelSize: 11
-                                font.weight: Font.Normal
-                            }
-                            RowLayout {
-                                Layout.alignment: Qt.AlignHCenter
-                                spacing: 5
-                                IconText {
-                                    text: UPower.onBattery ? "󰁹" : "󰂄"
-                                    color: UPower.onBattery ? Theme.orange : Theme.green
-                                    font.pixelSize: 11
-                                }
-                                BarText {
-                                    text: Math.round(UPower.displayDevice.percentage * 100) + "%"
-                                    color: Theme.muted
-                                    font.pixelSize: 10
-                                }
+                                Behavior on color { ColorAnimation { duration: 150 } }
                             }
                         }
                     }
                 }
 
                 GridLayout {
+                    visible: ShellSettings.showQuickToggles
+                    opacity: visible ? 1 : 0
                     Layout.fillWidth: true
                     columns: 3
                     columnSpacing: 8
@@ -171,6 +186,7 @@ Pill {
                         icon: "󰖔"
                         label: "Night Light"
                         active: NightLightService.enabled
+                        accent: Theme.pastelButter
                         showArrow: true
                         onToggled: NightLightService.toggle()
                         onDetailsRequested: root.page = "nightlight"
@@ -178,9 +194,9 @@ Pill {
                     QuickToggle {
                         Layout.fillWidth: true
                         icon: "󰂚"
-                        label: NotificationService.count > 0
-                            ? "Notifications · " + NotificationService.count : "Notifications"
+                        label: "Notifications"
                         showArrow: true
+                        accent: Theme.pastelRose
                         onToggled: root.page = "notifications"
                         onDetailsRequested: root.page = "notifications"
                     }
@@ -189,11 +205,14 @@ Pill {
                         icon: "󰂛"
                         label: "DND"
                         active: NotificationService.doNotDisturb
-                        onToggled: NotificationService.doNotDisturb = !NotificationService.doNotDisturb
+                        accent: Theme.pastelLilac
+                        onToggled: NotificationService.toggleDnd()
                     }
                 }
 
                 Rectangle {
+                    visible: ShellSettings.showSliders
+                    opacity: visible ? 1 : 0
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     implicitHeight: 118
@@ -212,7 +231,7 @@ Pill {
                             showTitle: false
                             embedded: true
                             icon: AudioService.muted || AudioService.volume === 0 ? "󰖁" : "󰕾"
-                            accent: Theme.blue
+                            accent: Theme.pastelPeach
                             currentValue: AudioService.volume * 100
                             onValueMoved: newValue => AudioService.setVolume(newValue / 100)
                         }
@@ -225,7 +244,7 @@ Pill {
                             showTitle: false
                             embedded: true
                             icon: "󰃠"
-                            accent: Theme.blue
+                            accent: Theme.pastelButter
                             minimum: 1
                             currentValue: BrightnessService.brightness * 100
                             onValueMoved: newValue => BrightnessService.setBrightness(newValue / 100)
@@ -233,7 +252,65 @@ Pill {
                     }
                 }
 
+                Rectangle {
+                    visible: root.powerProfilesVisible
+                    opacity: visible ? 1 : 0
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: visible ? 58 : 0
+                    radius: 16
+                    color: Theme.surfaceHover
+                    border.width: 0
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 7
+                        spacing: 6
+
+                        Repeater {
+                            model: PowerProfileService.availableProfiles
+                            Rectangle {
+                                required property string modelData
+                                readonly property bool selected: PowerProfileService.currentProfile === modelData
+                                readonly property color accent: PowerProfileService.accent(modelData)
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                radius: 12
+                                color: selected ? accent : modeMouse.containsMouse ? Theme.surface : "transparent"
+                                opacity: PowerProfileService.changing && !selected ? 0.62 : 1
+
+                                ColumnLayout {
+                                    anchors.centerIn: parent
+                                    spacing: 1
+                                    IconText {
+                                        Layout.alignment: Qt.AlignHCenter
+                                        text: PowerProfileService.icon(modelData)
+                                        color: selected ? Theme.background : accent
+                                        font.pixelSize: 14
+                                    }
+                                    BarText {
+                                        Layout.alignment: Qt.AlignHCenter
+                                        text: PowerProfileService.label(modelData)
+                                        color: selected ? Theme.background : Theme.text
+                                        font.pixelSize: 10
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: modeMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    enabled: !PowerProfileService.changing
+                                    onClicked: PowerProfileService.setProfile(modelData)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 GridLayout {
+                    visible: ShellSettings.showSystemStats
+                    opacity: visible ? 1 : 0
                     Layout.fillWidth: true
                     Layout.preferredHeight: 72
                     columns: 2
@@ -245,6 +322,7 @@ Pill {
                             { label: "CPU", value: SystemStatsService.cpuPercent, icon: "󰻠" }
                         ]
                         Rectangle {
+                            required property int index
                             required property var modelData
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -256,12 +334,12 @@ Pill {
                                 spacing: 5
                                 RowLayout {
                                     Layout.fillWidth: true
-                                    IconText { text: modelData.icon; color: Theme.blue }
+                                    IconText { text: modelData.icon; color: index === 0 ? Theme.pastelLilac : Theme.pastelPeach }
                                     BarText { text: modelData.label; Layout.fillWidth: true; color: Theme.muted; font.pixelSize: 10 }
                                     BarText { text: modelData.value + "%"; color: Theme.blue }
                                 }
                                 Rectangle {
-                                    Layout.fillWidth: true; height: 8; radius: 4; color: "#232A2D"
+                                    Layout.fillWidth: true; height: 8; radius: 4; color: Theme.border
                                     Rectangle {
                                         width: parent.width * Math.max(0, Math.min(1, modelData.value / 100))
                                         height: parent.height; radius: parent.radius; color: Theme.blue
@@ -274,31 +352,32 @@ Pill {
                 }
 
                 Rectangle {
+                    visible: ShellSettings.showSystemStats
+                    opacity: visible ? 1 : 0
                     Layout.fillWidth: true
                     Layout.preferredHeight: 55
                     radius: 16
                     color: Theme.surfaceHover
-                    RowLayout {
+                    ColumnLayout {
                         anchors.fill: parent
                         anchors.leftMargin: 11; anchors.rightMargin: 11
-                        IconText { text: "󰋊"; color: Theme.blue }
-                        ColumnLayout {
-                            Layout.fillWidth: true; spacing: 4
-                            RowLayout {
-                                Layout.fillWidth: true
-                                BarText { text: "Disk"; Layout.fillWidth: true; color: Theme.muted; font.pixelSize: 10 }
-                                BarText {
-                                    text: SystemStatsService.diskUsedGb + " / " + SystemStatsService.diskTotalGb + " GB"
-                                    color: Theme.blue; font.pixelSize: 11
-                                }
+                        anchors.topMargin: 8; anchors.bottomMargin: 8
+                        spacing: 4
+                        RowLayout {
+                            Layout.fillWidth: true
+                            IconText { text: "󰋊"; color: Theme.pastelMint }
+                            BarText { text: "Disk"; Layout.fillWidth: true; color: Theme.muted; font.pixelSize: 10 }
+                            BarText {
+                                text: SystemStatsService.diskUsedGb + " / " + SystemStatsService.diskTotalGb + " GB"
+                                color: Theme.blue; font.pixelSize: 11
                             }
+                        }
+                        Rectangle {
+                            Layout.fillWidth: true; height: 8; radius: 4; color: Theme.border
                             Rectangle {
-                                Layout.fillWidth: true; height: 8; radius: 4; color: "#232A2D"
-                                Rectangle {
-                                    width: parent.width * Math.max(0, Math.min(1, SystemStatsService.diskPercent / 100))
-                                    height: parent.height; radius: parent.radius; color: Theme.blue
-                                    Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                                }
+                                width: parent.width * Math.max(0, Math.min(1, SystemStatsService.diskPercent / 100))
+                                height: parent.height; radius: parent.radius; color: Theme.blue
+                                Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                             }
                         }
                     }
@@ -367,7 +446,10 @@ Pill {
                     delegate: WifiNetworkCard {
                         width: ListView.view.width
                         passwordEditorExpanded: root.expandedNetwork === network.name
-                        onPasswordEditorRequested: root.expandedNetwork = network.name
+                        onPasswordEditorRequested: {
+                            NetworkService.pauseScanning()
+                            root.expandedNetwork = network.name
+                        }
                         onPasswordEditorClosed: root.expandedNetwork = ""
                     }
                 }
@@ -441,7 +523,7 @@ Pill {
                     delegate: BluetoothDeviceCard {
                         width: ListView.view.width
                         onActivationRequested: device => BluetoothService.activateDevice(device)
-                        onForgetRequested: device => device.forget()
+                        onForgetRequested: device => BluetoothService.forgetDevice(device)
                     }
                 }
 
@@ -478,7 +560,7 @@ Pill {
                     Pill {
                         visible: NotificationService.count > 0
                         horizontalPadding: 10
-                        IconText { text: "󰃢"; color: Theme.red }
+                        IconText { text: "󰃢"; color: Theme.pastelRose }
                         BarText { text: "Clear"; font.pixelSize: 11 }
                         onClicked: NotificationService.clear()
                     }
@@ -500,7 +582,9 @@ Pill {
                         required property string summary
                         required property string body
                         required property string icon
+                        required property string image
                         required property var object
+                        required property var receivedAt
                         width: ListView.view.width
                         height: notificationCard.implicitHeight
 
@@ -512,9 +596,12 @@ Pill {
                             summary: notificationDelegate.summary
                             body: notificationDelegate.body
                             iconSource: notificationDelegate.icon
+                            imageSource: notificationDelegate.image
                             notificationObject: notificationDelegate.object
+                            receivedAt: notificationDelegate.receivedAt
                             onCloseRequested: id => NotificationService.remove(id, true)
                             onActionRequested: (id, action) => NotificationService.invokeAction(id, action)
+                            onDefaultActionRequested: id => NotificationService.invokeDefaultAction(id)
                         }
                     }
                 }
@@ -590,7 +677,7 @@ Pill {
                         showTitle: false
                         embedded: true
                         icon: "󰖔"
-                        accent: Theme.orange
+                        accent: Theme.pastelButter
                         minimum: 1000
                         maximum: 6500
                         currentValue: NightLightService.temperature

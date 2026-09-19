@@ -6,21 +6,33 @@ PanelWindow {
     id: root
     required property var targetScreen
     screen: targetScreen
-    anchors { bottom: true }
-    margins { bottom: 58 }
+    readonly property bool vertical: ShellSettings.osdPosition === "left" || ShellSettings.osdPosition === "right"
+    anchors {
+        top: ShellSettings.osdPosition === "top"
+        bottom: ShellSettings.osdPosition === "bottom"
+        left: ShellSettings.osdPosition === "left"
+        right: ShellSettings.osdPosition === "right"
+    }
+    margins {
+        top: ShellSettings.osdPosition === "top" ? ShellSettings.osdOffset : 0
+        bottom: ShellSettings.osdPosition === "bottom" ? ShellSettings.osdOffset : 0
+        left: ShellSettings.osdPosition === "left" ? ShellSettings.osdOffset : 0
+        right: ShellSettings.osdPosition === "right" ? ShellSettings.osdOffset : 0
+    }
     exclusiveZone: 0
-    implicitWidth: 360
-    implicitHeight: 70
+    implicitWidth: root.vertical ? 70 : 360
+    implicitHeight: root.vertical ? 300 : 70
     color: "transparent"
     visible: OsdState.shown
 
     Rectangle {
         anchors.fill: parent
         radius: 28
-        color: "#0A1114"
+        color: Theme.background
         border.width: 0
 
         RowLayout {
+            visible: OsdState.kind !== "profile" && !root.vertical
             anchors.fill: parent
             anchors.leftMargin: 14
             anchors.rightMargin: 18
@@ -30,27 +42,34 @@ PanelWindow {
                 Layout.preferredWidth: 42
                 Layout.preferredHeight: 42
                 radius: 21
-                color: "#232A2D"
-                IconText {
-                    anchors.centerIn: parent
-                    text: OsdState.kind === "brightness" ? "󰃠"
-                        : OsdState.muted || OsdState.value === 0 ? "󰖁" : "󰕾"
-                    color: Theme.blue
-                    font.pixelSize: 20
-                }
+                color: Theme.border
+
+                VectorIcon { anchors.centerIn: parent; path: OsdState.levelIconPath; iconColor: Theme.blue }
             }
 
             Rectangle {
+                id: horizontalTrack
                 Layout.fillWidth: true
                 height: 12
                 radius: 6
-                color: "#232A2D"
+                color: Theme.border
                 Rectangle {
                     width: parent.width * OsdState.value
                     height: parent.height
                     radius: parent.radius
                     color: Theme.blue
                     Behavior on width { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    function applyPosition(px) {
+                        const value = Math.max(0, Math.min(1, px / width))
+                        if (OsdState.kind === "brightness") BrightnessService.setBrightness(value)
+                        else AudioService.setVolume(value)
+                    }
+                    onPressed: mouse => applyPosition(mouse.x)
+                    onPositionChanged: mouse => { if (pressed) applyPosition(mouse.x) }
                 }
             }
 
@@ -59,6 +78,119 @@ PanelWindow {
                 horizontalAlignment: Text.AlignRight
                 text: Math.round(OsdState.value * 100) + "%"
                 color: Theme.blue
+                font.pixelSize: 13
+            }
+        }
+
+        ColumnLayout {
+            visible: OsdState.kind !== "profile" && root.vertical
+            anchors.fill: parent
+            anchors.leftMargin: 8
+            anchors.rightMargin: 8
+            anchors.topMargin: 14
+            anchors.bottomMargin: 14
+            spacing: 12
+
+            Rectangle {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: 42
+                Layout.preferredHeight: 42
+                radius: 21
+                color: Theme.border
+                VectorIcon { anchors.centerIn: parent; path: OsdState.levelIconPath; iconColor: Theme.blue }
+            }
+
+            Rectangle {
+                id: verticalTrack
+                Layout.alignment: Qt.AlignHCenter
+                Layout.fillHeight: true
+                width: 12
+                radius: 6
+                color: Theme.border
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    height: parent.height * OsdState.value
+                    radius: parent.radius
+                    color: Theme.blue
+                    Behavior on height { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    function applyPosition(py) {
+                        const value = Math.max(0, Math.min(1, 1 - py / height))
+                        if (OsdState.kind === "brightness") BrightnessService.setBrightness(value)
+                        else AudioService.setVolume(value)
+                    }
+                    onPressed: mouse => applyPosition(mouse.y)
+                    onPositionChanged: mouse => { if (pressed) applyPosition(mouse.y) }
+                }
+            }
+
+            BarText {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: 54
+                horizontalAlignment: Text.AlignHCenter
+                text: Math.round(OsdState.value * 100) + "%"
+                color: Theme.blue
+                font.pixelSize: 12
+            }
+        }
+
+        RowLayout {
+            visible: OsdState.kind === "profile" && !root.vertical
+            anchors.fill: parent
+            anchors.leftMargin: 14
+            anchors.rightMargin: 18
+            spacing: 13
+
+            Rectangle {
+                Layout.preferredWidth: 42
+                Layout.preferredHeight: 42
+                radius: 21
+                color: Theme.border
+
+                IconText {
+                    id: profileIcon
+                    anchors.fill: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    transform: Translate { x: -2 }
+                    text: OsdState.profileIcon
+                    color: OsdState.profileAccent
+                    font.pixelSize: 20
+                }
+            }
+
+            BarText {
+                Layout.fillWidth: true
+                text: OsdState.profileLabel + " mode"
+                color: OsdState.profileAccent
+                font.pixelSize: 16
+            }
+        }
+
+        ColumnLayout {
+            visible: OsdState.kind === "profile" && root.vertical
+            anchors.centerIn: parent
+            spacing: 12
+            Rectangle {
+                Layout.alignment: Qt.AlignHCenter
+                width: 42; height: 42; radius: 21; color: Theme.border
+                IconText {
+                    anchors.fill: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    text: OsdState.profileIcon
+                    color: OsdState.profileAccent
+                    font.pixelSize: 20
+                }
+            }
+            BarText {
+                Layout.alignment: Qt.AlignHCenter
+                text: OsdState.profileLabel
+                color: OsdState.profileAccent
                 font.pixelSize: 13
             }
         }

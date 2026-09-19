@@ -5,6 +5,7 @@ import Quickshell.Widgets
 
 Pill {
     id: root
+    property bool compact: false
 
     function findSpotify() {
         const players = Mpris.players.values
@@ -27,12 +28,18 @@ Pill {
             player.position = Math.max(0, Math.min(player.length, ratio * player.length))
     }
     visible: player !== null
-    implicitWidth: Math.min(350, mediaRow.implicitWidth + horizontalPadding * 2)
+    implicitWidth: compact ? Theme.pillHeight : Math.min(350, mediaRow.implicitWidth + horizontalPadding * 2)
+    horizontalPadding: compact ? 6 : 10
 
     RowLayout {
         id: mediaRow
-        IconText { text: ""; color: Theme.green }
+        AnimatedEqualizer {
+            playing: root.player && root.player.isPlaying
+            accent: Theme.pastelMint
+            vertical: root.compact
+        }
         BarText {
+            visible: !root.compact
             Layout.maximumWidth: 300
             elide: Text.ElideRight
             text: root.player ? ((root.player.trackArtist || "Unknown") + " – " + (root.player.trackTitle || "Unknown")) : ""
@@ -56,21 +63,21 @@ Pill {
     ModulePopup {
         id: popup
         anchorItem: root
-        implicitWidth: 440
-        implicitHeight: 126
+        implicitWidth: 420
+        implicitHeight: 104
 
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
-            anchors.topMargin: 9
-            anchors.bottomMargin: 9
-            spacing: 12
+            anchors.leftMargin: 9
+            anchors.rightMargin: 9
+            anchors.topMargin: 6
+            anchors.bottomMargin: 6
+            spacing: 10
 
             ClippingRectangle {
-                Layout.preferredWidth: 92
-                Layout.preferredHeight: 92
-                radius: 12
+                Layout.preferredWidth: 82
+                Layout.preferredHeight: 82
+                radius: 11
                 color: Theme.background
 
                 Image {
@@ -91,14 +98,27 @@ Pill {
                     Layout.fillWidth: true
                     spacing: 7
                     BarText { text: root.formatTime(root.player ? root.player.position : 0); color: Theme.muted; font.pixelSize: 10 }
-                    WaveProgress {
+                    Rectangle {
                         id: progressTrack
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 24
-                        progress: root.player && root.player.length > 0
-                            ? root.player.position / root.player.length : 0
-                        accent: Theme.green
-                        onSeekRequested: ratio => root.seekFromRatio(ratio)
+                        Layout.preferredHeight: 8
+                        radius: 4
+                        color: Theme.border
+                        readonly property real progress: root.player && root.player.length > 0
+                            ? Math.max(0, Math.min(1, root.player.position / root.player.length)) : 0
+                        Rectangle {
+                            width: parent.width * parent.progress
+                            height: parent.height
+                            radius: parent.radius
+                            color: Theme.blue
+                            Behavior on width { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onPressed: event => root.seekFromRatio(event.x / width)
+                            onPositionChanged: event => { if (pressed) root.seekFromRatio(event.x / width) }
+                        }
                     }
                     BarText { text: root.formatTime(root.player ? root.player.length : 0); color: Theme.muted; font.pixelSize: 10 }
                 }

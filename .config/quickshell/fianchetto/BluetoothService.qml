@@ -56,6 +56,21 @@ Singleton {
         }
     }
 
+    function forgetDevice(device) {
+        if (!device) return
+
+        const address = (device.address || "").trim().toUpperCase()
+        // Use BlueZ's command-line client directly here. On some Quickshell
+        // builds device.forget() returns without the adapter completing
+        // RemoveDevice, leaving the bond visible in Blueman.
+        if (!/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(address))
+            return
+
+        if (pendingPairDevice === device)
+            pendingPairDevice = null
+        Quickshell.execDetached(["bluetoothctl", "remove", address])
+    }
+
     onScanningRequestedChanged: updateScanner()
 
     Connections {

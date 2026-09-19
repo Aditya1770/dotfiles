@@ -8,12 +8,16 @@ Rectangle {
     readonly property var device: modelData
     signal activationRequested(var device)
     signal forgetRequested(var device)
+    signal expansionRequested(var device, bool expand)
     property bool expanded: false
+    property bool selectionManaged: false
 
-    height: expanded ? 104 : 54
+    implicitHeight: expanded ? 104 : 54
+    height: implicitHeight
     radius: 11
-    color: device.connected ? Theme.surfaceHover : Theme.background
-    border.width: 0
+    color: device.connected || expanded ? Theme.surfaceHover : Theme.background
+    border.width: expanded ? 1 : 0
+    border.color: Theme.blue
 
     clip: true
     Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
@@ -29,7 +33,12 @@ Rectangle {
             spacing: 9
             Rectangle {
                 Layout.preferredWidth: 34; Layout.preferredHeight: 34; radius: 9; color: Theme.surface
-                Image { anchors.fill: parent; anchors.margins: 7; source: Quickshell.iconPath(root.device.icon, "bluetooth") }
+                Image {
+                    anchors.fill: parent
+                    anchors.margins: 7
+                    source: Quickshell.iconPath(root.device.icon, "bluetooth")
+                    opacity: root.device.connected ? 1 : 0.72
+                }
             }
             ColumnLayout {
                 Layout.fillWidth: true
@@ -81,7 +90,10 @@ Rectangle {
         anchors.right: parent.right
         height: 54
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.expanded = !root.expanded
+        onClicked: {
+            if (root.selectionManaged) root.expansionRequested(root.device, !root.expanded)
+            else root.expanded = !root.expanded
+        }
     }
     NumberAnimation on opacity { from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic }
 }

@@ -39,7 +39,17 @@ PanelWindow {
     }
 
     readonly property var results: {
-        const needle = query.trim().toLowerCase()
+        const rawQuery = query.trim()
+        if (rawQuery.startsWith(">")) {
+            const command = rawQuery.slice(1).trim()
+            return command ? [{
+                kind: "command",
+                name: command,
+                subtitle: "Run in Kitty",
+                icon: "utilities-terminal"
+            }] : []
+        }
+        const needle = rawQuery.toLowerCase()
         let applications = DesktopEntries.applications.values.filter(entry => {
             if (!needle) return true
             return [entry.name, entry.genericName, entry.comment, ...(entry.keywords || [])]
@@ -69,6 +79,8 @@ PanelWindow {
         if (!resultsList.currentItem) return
         const result = resultsList.currentItem.result
         if (result.kind === "calculator") Quickshell.execDetached(["wl-copy", result.name])
+        else if (result.kind === "command")
+            Quickshell.execDetached(["kitty", "sh", "-lc", result.name + "; exec ${SHELL:-/bin/sh}"])
         else result.entry.execute()
         LauncherState.hide()
     }
@@ -82,8 +94,6 @@ PanelWindow {
         resultsList.positionViewAtIndex(next, ListView.Contain)
     }
 
-    mask: Region { Region { item: panel } }
-
     HyprlandFocusGrab {
         id: focusGrab
         windows: [root]
@@ -95,6 +105,11 @@ PanelWindow {
         context: Qt.ApplicationShortcut
         enabled: root.visible
         onActivated: LauncherState.hide()
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        onClicked: LauncherState.hide()
     }
 
     Rectangle {

@@ -1,6 +1,10 @@
 singleton Theme 1.0 Theme.qml
 singleton Typography 1.0 Typography.qml
 singleton UserConfig 1.0 UserConfig.qml
+singleton ShellSettings 1.0 ShellSettings.qml
+singleton CustomTheme 1.0 CustomTheme.qml
+singleton ThemeManager 1.0 ThemeManager.qml
+singleton SettingsWindow 1.0 SettingsWindow.qml
 singleton PopupManager 1.0 PopupManager.qml
 singleton NetworkService 1.0 NetworkService.qml
 singleton BluetoothService 1.0 BluetoothService.qml
@@ -15,12 +19,15 @@ singleton ClipboardState 1.0 ClipboardState.qml
 singleton ClipboardService 1.0 ClipboardService.qml
 singleton EmojiFavorites 1.0 EmojiFavorites.qml
 singleton SystemStatsService 1.0 SystemStatsService.qml
+singleton PowerProfileService 1.0 PowerProfileService.qml
 singleton WeatherService 1.0 WeatherService.qml
 singleton EventService 1.0 EventService.qml
 singleton HolidayService 1.0 HolidayService.qml
 Bar 1.0 Bar.qml
 BarText 1.0 BarText.qml
 IconText 1.0 IconText.qml
+VectorIcon 1.0 VectorIcon.qml
+InverseCorner 1.0 InverseCorner.qml
 Pill 1.0 Pill.qml
 Tray 1.0 Tray.qml
 Workspaces 1.0 Workspaces.qml
@@ -41,4 +48,8 @@ SettingsHeader 1.0 SettingsHeader.qml
 WifiNetworkCard 1.0 WifiNetworkCard.qml
 BluetoothDeviceCard 1.0 BluetoothDeviceCard.qml
 PowerModule 1.0 PowerModule.qml
-WaveProgress 1.0 WaveProgress.qml
+PowerAction 1.0 PowerAction.qml
+AnimatedEqualizer 1.0 AnimatedEqualizer.qml
+MaterialSwitch 1.0 MaterialSwitch.qml
+MaterialSlider 1.0 MaterialSlider.qml
+MaterialButton 1.0 MaterialButton.qml

@@ -11,6 +11,10 @@ Singleton {
     readonly property int count: notificationModel.count
     readonly property int popupCount: popupModel.count
 
+    function toggleDnd() {
+        doNotDisturb = !doNotDisturb
+    }
+
     function iconSource(notification) {
         const source = notification.image || notification.appIcon || ""
         if (!source) return ""
@@ -26,7 +30,8 @@ Singleton {
             appName: notification.appName || "Notification",
             summary: notification.summary || "Notification",
             body: notification.body || "",
-            icon: iconSource(notification),
+            icon: notification.appIcon ? iconSource({ image: "", appIcon: notification.appIcon }) : "",
+            image: notification.image || "",
             receivedAt: new Date()
         }
     }
@@ -67,17 +72,35 @@ Singleton {
         remove(notificationId, false)
     }
 
+    function invokeDefaultAction(notificationId) {
+        for (let i = 0; i < notificationModel.count; ++i) {
+            const item = notificationModel.get(i)
+            if (item.notificationId !== notificationId || !item.object)
+                continue
+            for (const action of item.object.actions) {
+                if (action.identifier === "default") {
+                    action.invoke()
+                    remove(notificationId, false)
+                    return
+                }
+            }
+        }
+    }
+
     ListModel { id: notificationModel }
     ListModel { id: popupModel }
 
     NotificationServer {
+        id: server
         bodySupported: true
-        bodyMarkupSupported: false
+        bodyMarkupSupported: true
+        bodyHyperlinksSupported: true
+        bodyImagesSupported: true
         imageSupported: true
         actionsSupported: true
         actionIconsSupported: true
         persistenceSupported: true
-        keepOnReload: true
+        keepOnReload: false
 
         onNotification: notification => {
             notification.tracked = true

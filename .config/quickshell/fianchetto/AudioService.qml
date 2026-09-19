@@ -7,6 +7,7 @@ Singleton {
     id: root
     property real volume: 0
     property bool muted: false
+    property bool microphoneMuted: false
     property real pendingVolume: 0
     property bool initialized: false
 
@@ -23,6 +24,12 @@ Singleton {
         OsdState.show("volume", volume, muted)
         muteSetter.command = ["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"]
         muteSetter.running = true
+    }
+
+    function toggleMicrophoneMute() {
+        microphoneMuted = !microphoneMuted
+        micMuteSetter.command = ["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"]
+        micMuteSetter.running = true
     }
 
     function readOutput(data) {
@@ -46,6 +53,13 @@ Singleton {
     }
     Process { id: setter; onExited: reader.running = true }
     Process { id: muteSetter; onExited: reader.running = true }
+    Process {
+        id: micReader
+        running: true
+        command: ["wpctl", "get-volume", "@DEFAULT_AUDIO_SOURCE@"]
+        stdout: SplitParser { onRead: data => root.microphoneMuted = data.includes("MUTED") }
+    }
+    Process { id: micMuteSetter; onExited: micReader.running = true }
     Timer {
         id: writeTimer
         interval: 40
@@ -56,4 +70,5 @@ Singleton {
         }
     }
     Timer { interval: 2000; running: true; repeat: true; onTriggered: if (!reader.running) reader.running = true }
+    Timer { interval: 2000; running: true; repeat: true; onTriggered: if (!micReader.running) micReader.running = true }
 }

@@ -2,6 +2,6 @@ import QtQuick
 
 Pill {
     horizontalPadding: 7
-    IconText { text: "󰊠"; color: Theme.blue }
+    IconText { text: ShellSettings.launcherIcon || "󰊠"; color: Theme.pastelLilac }
     onClicked: LauncherState.toggle()
 }

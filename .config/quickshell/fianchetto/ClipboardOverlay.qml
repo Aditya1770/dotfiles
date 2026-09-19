@@ -198,7 +198,7 @@ PanelWindow {
                 Pill {
                     visible: ClipboardState.page === "clipboard" && ClipboardService.count > 0
                     horizontalPadding: 10
-                    IconText { text: "󰃢"; color: Theme.red }
+                    IconText { text: "󰃢"; color: Theme.pastelRose }
                     BarText { text: "Clear"; font.pixelSize: 11 }
                     onClicked: ClipboardService.clear()
                 }
@@ -260,8 +260,9 @@ PanelWindow {
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 currentIndex: count > 0 ? 0 : -1
-                highlightMoveDuration: 100
-                highlight: Rectangle { radius: 16; color: Theme.border }
+                // Each delegate owns its hover state. A second animated ListView
+                // highlight used to lag behind the pointer and leave a trail.
+                highlight: null
 
                 delegate: Rectangle {
                     required property var modelData
@@ -270,7 +271,7 @@ PanelWindow {
                     width: ListView.view.width
                     height: entry.entryType === "image" ? 180 : 70
                     radius: 16
-                    color: ListView.isCurrentItem || itemMouse.containsMouse ? Theme.border : Theme.surfaceHover
+                    color: ListView.isCurrentItem ? Theme.border : Theme.surfaceHover
                     border.width: 0
 
                     Image {
@@ -298,7 +299,7 @@ PanelWindow {
                         anchors.margins: 8
                         width: 28; height: 28; radius: 10
                         color: Theme.background
-                        IconText { anchors.centerIn: parent; text: "󰆴"; color: Theme.red; font.pixelSize: 12 }
+                        IconText { anchors.centerIn: parent; text: "󰆴"; color: Theme.pastelRose; font.pixelSize: 12 }
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor

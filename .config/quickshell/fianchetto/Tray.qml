@@ -7,8 +7,9 @@ import Quickshell.Widgets
 Rectangle {
     id: root
     required property var hostWindow
-    implicitWidth: trayRow.implicitWidth + 14
-    implicitHeight: Theme.pillHeight
+    property bool vertical: false
+    implicitWidth: vertical ? Theme.pillHeight : trayLayout.implicitWidth + 14
+    implicitHeight: vertical ? trayLayout.implicitHeight + 8 : Theme.pillHeight
     radius: Theme.radius
     color: trayHover.hovered ? Theme.surfaceHover : Theme.surface
     border.width: 0
@@ -16,12 +17,15 @@ Rectangle {
     HoverHandler { id: trayHover }
     Behavior on color { ColorAnimation { duration: 120 } }
 
-    RowLayout {
-        id: trayRow
+    GridLayout {
+        id: trayLayout
         anchors.centerIn: parent
-        spacing: 7
+        columns: root.vertical ? 1 : Math.max(1, trayRepeater.count)
+        rowSpacing: 4
+        columnSpacing: 7
 
         Repeater {
+            id: trayRepeater
             model: SystemTray.items
 
             Item {

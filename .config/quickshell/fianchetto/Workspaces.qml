@@ -4,9 +4,12 @@ import Quickshell.Hyprland
 
 Pill {
     id: root
-    horizontalPadding: 12
     interactive: false
     property int revision: 0
+    property bool vertical: false
+    readonly property real widthScale: Math.max(0.6, Math.min(1.6, ShellSettings.workspaceWidth / 100))
+    horizontalPadding: vertical ? 9 : Math.round(8 * widthScale)
+    implicitHeight: vertical ? workspaceGrid.implicitHeight + 14 : Theme.pillHeight
 
     function occupied(workspaceId) {
         revision
@@ -20,8 +23,11 @@ Pill {
         function onRawEvent(event) { root.revision++ }
     }
 
-    RowLayout {
-        spacing: 10
+    GridLayout {
+        id: workspaceGrid
+        columns: root.vertical ? 1 : 10
+        rowSpacing: root.vertical ? Math.round(5 * root.widthScale) : 0
+        columnSpacing: root.vertical ? 0 : Math.round(6 * root.widthScale)
 
         Repeater {
             model: 10
@@ -30,16 +36,23 @@ Pill {
                 required property int index
                 readonly property bool active: Hyprland.focusedWorkspace && Hyprland.focusedWorkspace.id === index + 1
                 readonly property bool hasWindows: root.occupied(index + 1)
-                implicitWidth: active ? 17 : 7
-                implicitHeight: 7
+                implicitWidth: root.vertical ? 7 : Math.round(15 * root.widthScale)
+                implicitHeight: root.vertical ? Math.round(15 * root.widthScale) : 7
                 width: implicitWidth
                 height: implicitHeight
-                radius: 4
-                color: hasWindows || active ? (active ? Theme.text : Theme.muted) : "transparent"
-                border.width: hasWindows || active ? 0 : 1
-                border.color: Theme.muted
+                color: "transparent"
 
-                Behavior on implicitWidth { NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: root.vertical ? 7 : (parent.active ? Math.round(15 * root.widthScale) : 7)
+                    height: root.vertical ? (parent.active ? Math.round(15 * root.widthScale) : 7) : 7
+                    radius: 4
+                    color: parent.hasWindows || parent.active ? (parent.active ? Theme.blue : Theme.muted) : "transparent"
+                    border.width: parent.hasWindows || parent.active ? 0 : 1
+                    border.color: Theme.muted
+                    Behavior on width { NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
+                    Behavior on color { ColorAnimation { duration: 140 } }
+                }
 
                 MouseArea {
                     anchors.fill: parent
@@ -48,7 +61,6 @@ Pill {
                     onClicked: Hyprland.dispatch('hl.dsp.focus({ workspace = "' + String(index + 1) + '" })')
                 }
 
-                Behavior on color { ColorAnimation { duration: 140 } }
             }
         }
     }

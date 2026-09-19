@@ -40,7 +40,9 @@ PanelWindow {
             required property string summary
             required property string body
             required property string icon
+            required property string image
             required property var object
+            required property var receivedAt
             width: ListView.view.width
             height: toastCard.implicitHeight
 
@@ -52,10 +54,13 @@ PanelWindow {
                 summary: toastDelegate.summary
                 body: toastDelegate.body
                 iconSource: toastDelegate.icon
+                imageSource: toastDelegate.image
                 notificationObject: toastDelegate.object
+                receivedAt: toastDelegate.receivedAt
                 toast: true
                 onCloseRequested: id => NotificationService.removePopup(id)
                 onActionRequested: (id, action) => NotificationService.invokeAction(id, action)
+                onDefaultActionRequested: id => NotificationService.invokeDefaultAction(id)
             }
         }
     }

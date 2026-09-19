@@ -55,7 +55,7 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         height: 12
         radius: 6
-        color: "#232A2D"
+        color: Theme.border
         Rectangle {
             width: Math.max(0, Math.min(parent.width, parent.width * (root.displayValue - root.minimum) / (root.maximum - root.minimum)))
             height: parent.height

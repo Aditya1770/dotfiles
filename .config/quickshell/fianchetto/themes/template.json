@@ -1,0 +1,15 @@
+{
+  "background": "#070B0D",
+  "surfaceHover": "#11191B",
+  "border": "#1A272B",
+  "text": "#DADADA",
+  "muted": "#B3B9B8",
+  "accent": "#67B0E8",
+  "sky": "#8FCDF4",
+  "mint": "#79BFE5",
+  "lilac": "#A8C8F2",
+  "peach": "#70AEDD",
+  "rose": "#88B7E3",
+  "butter": "#B5D9F5",
+  "powerRed": "#F19AA3"
+}
