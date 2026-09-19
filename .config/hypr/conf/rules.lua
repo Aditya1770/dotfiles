@@ -6,6 +6,19 @@ hl.window_rule({
     size = "1038 609",
 })
 
+-- shell settings
+hl.window_rule({
+    name = "float-fianchetto-settings",
+    match = {
+        class = "org.quickshell",
+        title = "Fianchetto Settings",
+    },
+
+    float = true,
+    size = "920 620",
+    center = true,
+})
+
 
 -- Feh
 hl.window_rule({
