@@ -1,5 +1,13 @@
 #!/bin/sh
 
+# Launch this copy directly instead of relying on Quickshell's named-config
+# search path. This also works from GNU Stow symlinks and custom XDG paths.
+script_dir=$(CDPATH= cd "$(dirname "$0")" && pwd)
+if [ ! -f "$script_dir/shell.qml" ]; then
+    printf 'Fianchetto: shell.qml was not found beside start.sh: %s\n' "$script_dir" >&2
+    exit 1
+fi
+
 # Make Qt platform menus follow the current GTK3 theme and force Papirus-Dark
 # for freedesktop icon-name lookups.
 export QT_QPA_PLATFORMTHEME=gtk3
@@ -55,4 +63,4 @@ while busctl --user --list 2>/dev/null | grep -q '^org.freedesktop.Notifications
     attempt=$((attempt + 1))
 done
 
-exec qs -c fianchetto "$@"
+exec qs -p "$script_dir/shell.qml" "$@"
