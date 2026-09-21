@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Hyprland
 
@@ -15,6 +16,7 @@ PanelWindow {
     // Horizontal pills need more room when stacked vertically. Keeping the
     // side bar at the 36px horizontal height clips glyphs and popup anchors.
     readonly property int sideWidth: Theme.sideBarWidth
+    readonly property int shadowExtent: ShellSettings.barShadow ? 16 : 0
 
     anchors {
         top: ShellSettings.barPosition !== "bottom"
@@ -28,8 +30,8 @@ PanelWindow {
         left: ShellSettings.barPosition === "left" ? root.edgeGap : 0
         right: ShellSettings.barPosition === "right" ? root.edgeGap : 0
     }
-    implicitHeight: horizontal ? Theme.barHeight : 0
-    implicitWidth: horizontal ? 0 : root.sideWidth
+    implicitHeight: horizontal ? Theme.barHeight + root.shadowExtent : 0
+    implicitWidth: horizontal ? 0 : root.sideWidth + root.shadowExtent
     // Layer-shell applies the anchored-edge margin to the reserved area. Adding
     // edgeGap here as well leaves an extra strip between tiled windows and the
     // visible bar, which looks like a compositor window border.
@@ -37,7 +39,7 @@ PanelWindow {
     // boundary. At the monitor edge it is clipped, but beside a layer-shell
     // bar it becomes visible as a false "gap". Reserve one pixel less so the
     // bar covers that edge without changing the user's gaps_in setting.
-    exclusiveZone: Math.max(1, (root.horizontal ? Theme.barHeight : root.sideWidth)
+    exclusiveZone: Math.max(1, (root.horizontal ? Theme.barHeight : root.sideWidth) + root.shadowExtent
         - (ShellSettings.barFloating ? 0 : 1))
     color: "transparent"
 
@@ -46,7 +48,8 @@ PanelWindow {
         visible: root.horizontal
         width: root.width
         height: Theme.barHeight
-        anchors.centerIn: parent
+        anchors.top: ShellSettings.barPosition === "top" ? parent.top : undefined
+        anchors.bottom: ShellSettings.barPosition === "bottom" ? parent.bottom : undefined
 
         readonly property real inset: width * (100 - Math.max(50, Math.min(100, ShellSettings.barWidth))) / 200
             + (ShellSettings.barFloating ? root.edgeGap : 0)
@@ -68,6 +71,20 @@ PanelWindow {
             Behavior on x { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
             Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
             Behavior on radius { NumberAnimation { duration: 150 } }
+        }
+
+        MultiEffect {
+            anchors.fill: barSurface
+            source: barSurface
+            visible: ShellSettings.barShadow
+            z: -1
+            shadowEnabled: true
+            shadowColor: "#000000"
+            shadowOpacity: ShellSettings.shadowOpacity / 100
+            shadowBlur: ShellSettings.shadowBlur / 100
+            blurMax: 16
+            shadowVerticalOffset: ShellSettings.barPosition === "top" ? 3 : -3
+            autoPaddingEnabled: true
         }
 
         RowLayout {
@@ -95,13 +112,15 @@ PanelWindow {
         visible: !root.horizontal
         width: root.sideWidth
         height: root.height
-        anchors.centerIn: parent
+        anchors.left: ShellSettings.barPosition === "left" ? parent.left : undefined
+        anchors.right: ShellSettings.barPosition === "right" ? parent.right : undefined
 
         readonly property real inset: height * (100 - Math.max(50, Math.min(100, ShellSettings.barWidth))) / 200
             + (ShellSettings.barFloating ? root.edgeGap : 0)
         readonly property real surfaceHeight: height - inset * 2
 
         Rectangle {
+            id: sideBarSurface
             x: ShellSettings.barFloating || !root.cornersEnabled
                 ? 0 : ShellSettings.barPosition === "left" ? -ShellSettings.barRadius : 0
             y: sideStrip.inset
@@ -115,6 +134,21 @@ PanelWindow {
             Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
             Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
             Behavior on radius { NumberAnimation { duration: 150 } }
+        }
+
+
+        MultiEffect {
+            anchors.fill: sideBarSurface
+            source: sideBarSurface
+            visible: ShellSettings.barShadow
+            z: -1
+            shadowEnabled: true
+            shadowColor: "#000000"
+            shadowOpacity: ShellSettings.shadowOpacity / 100
+            shadowBlur: ShellSettings.shadowBlur / 100
+            blurMax: 16
+            shadowHorizontalOffset: ShellSettings.barPosition === "left" ? 3 : -3
+            autoPaddingEnabled: true
         }
 
         ColumnLayout {

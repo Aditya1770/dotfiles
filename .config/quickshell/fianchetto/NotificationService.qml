@@ -6,6 +6,11 @@ import Quickshell.Services.Notifications
 Singleton {
     id: root
     property bool doNotDisturb: false
+    // Layer-shell windows must not be moved while mapped on some Qt/Wayland
+    // combinations. Settings hides the toast window before changing geometry,
+    // then this service remaps it after the bindings have settled.
+    property bool geometryChangePending: false
+    property bool previewVisible: false
     property alias notifications: notificationModel
     property alias popups: popupModel
     readonly property int count: notificationModel.count
@@ -13,6 +18,32 @@ Singleton {
 
     function toggleDnd() {
         doNotDisturb = !doNotDisturb
+    }
+
+    function beginPreviewChange() {
+        geometryChangePending = true
+        previewVisible = false
+        previewDelay.restart()
+    }
+
+    function showPreview() {
+        previewVisible = true
+        previewTimer.restart()
+    }
+
+    Timer {
+        id: previewDelay
+        interval: 120
+        onTriggered: {
+            root.geometryChangePending = false
+            root.showPreview()
+        }
+    }
+
+    Timer {
+        id: previewTimer
+        interval: 2500
+        onTriggered: root.previewVisible = false
     }
 
     function iconSource(notification) {

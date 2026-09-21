@@ -25,7 +25,17 @@ Singleton {
     property alias barFloating: data.barFloating
     property alias barPosition: data.barPosition
     property alias osdPosition: data.osdPosition
-    property alias osdOffset: data.osdOffset
+    property alias osdHorizontalOffset: data.osdHorizontalOffset
+    property alias osdVerticalOffset: data.osdVerticalOffset
+    property alias notificationPosition: data.notificationPosition
+    property alias notificationHorizontalOffset: data.notificationHorizontalOffset
+    property alias notificationVerticalOffset: data.notificationVerticalOffset
+    property alias notificationShadow: data.notificationShadow
+    property alias barShadow: data.barShadow
+    property alias shadowOpacity: data.shadowOpacity
+    property alias shadowBlur: data.shadowBlur
+    property alias nightLightEnabled: data.nightLightEnabled
+    property alias nightLightTemperature: data.nightLightTemperature
     property alias themeFile: data.themeFile
 
     signal settingsRequested(string page)
@@ -54,7 +64,17 @@ Singleton {
         barFloating = false
         barPosition = "top"
         osdPosition = "bottom"
-        osdOffset = 58
+        osdHorizontalOffset = 0
+        osdVerticalOffset = 58
+        notificationPosition = "top-right"
+        notificationHorizontalOffset = 8
+        notificationVerticalOffset = 8
+        notificationShadow = true
+        barShadow = true
+        shadowOpacity = 42
+        shadowBlur = 70
+        nightLightEnabled = false
+        nightLightTemperature = 4000
         themeFile = ""
     }
 
@@ -93,7 +113,17 @@ Singleton {
             property bool barFloating: false
             property string barPosition: "top"
             property string osdPosition: "bottom"
-            property int osdOffset: 58
+            property int osdHorizontalOffset: 0
+            property int osdVerticalOffset: 58
+            property string notificationPosition: "top-right"
+            property int notificationHorizontalOffset: 8
+            property int notificationVerticalOffset: 8
+            property bool notificationShadow: true
+            property bool barShadow: true
+            property int shadowOpacity: 42
+            property int shadowBlur: 70
+            property bool nightLightEnabled: false
+            property int nightLightTemperature: 4000
             property string themeFile: ""
         }
     }

@@ -11,6 +11,11 @@ Rectangle {
     signal expansionRequested(var device, bool expand)
     property bool expanded: false
     property bool selectionManaged: false
+    readonly property string address: String(device.address || "").trim().toUpperCase()
+    readonly property bool operationBusy: BluetoothService.operationBusy
+        && BluetoothService.operationAddress === address
+    readonly property string operationError: BluetoothService.operationAddress === address
+        ? BluetoothService.operationError : ""
 
     implicitHeight: expanded ? 104 : 54
     height: implicitHeight
@@ -44,7 +49,15 @@ Rectangle {
                 Layout.fillWidth: true
                 spacing: 0
                 BarText { Layout.fillWidth: true; text: root.device.name || root.device.deviceName || "Unknown device"; elide: Text.ElideRight }
-                BarText { text: root.device.connected ? "Connected" : root.device.pairing ? "Pairing…" : root.device.paired ? "Paired" : "Available"; color: root.device.connected ? Theme.green : Theme.muted; font.pixelSize: 10 }
+                BarText {
+                    text: root.operationBusy
+                        ? BluetoothService.operationKind === "pair" ? "Pairing…"
+                        : BluetoothService.operationKind === "connect" ? "Connecting…"
+                        : BluetoothService.operationKind === "disconnect" ? "Disconnecting…" : "Forgetting…"
+                        : root.device.connected ? "Connected" : root.device.pairing ? "Pairing…" : root.device.paired ? "Paired" : "Available"
+                    color: root.device.connected ? Theme.green : root.operationError !== "" ? Theme.red : Theme.muted
+                    font.pixelSize: 10
+                }
             }
             BarText { visible: root.device.batteryAvailable; text: Math.round(root.device.battery * 100) + "%"; color: Theme.muted; font.pixelSize: 10 }
             IconText { text: root.expanded ? "󰅀" : "󰅂"; color: Theme.muted }
@@ -55,18 +68,27 @@ Rectangle {
             Layout.preferredHeight: 32
             spacing: 7
             visible: root.expanded
-            Item { Layout.fillWidth: true }
+            BarText {
+                Layout.fillWidth: true
+                visible: root.operationError !== ""
+                text: root.operationError
+                color: Theme.red
+                font.pixelSize: 9
+                elide: Text.ElideRight
+            }
+            Item { Layout.fillWidth: true; visible: root.operationError === "" }
             Rectangle {
                 Layout.preferredWidth: 88; Layout.preferredHeight: 32; radius: 9
                 color: Theme.surface; border.width: 0
                 BarText {
                     anchors.centerIn: parent
-                    text: root.device.connected ? "Disconnect" : root.device.paired ? "Connect" : "Pair"
+                    text: root.operationBusy ? "Working…" : root.device.connected ? "Disconnect" : root.device.paired ? "Connect" : "Pair"
                     color: root.device.connected ? Theme.red : Theme.green
                     font.pixelSize: 11
                 }
                 MouseArea {
                     anchors.fill: parent
+                    enabled: !root.operationBusy && !BluetoothService.operationBusy
                     cursorShape: Qt.PointingHandCursor
                     onClicked: { root.activationRequested(root.device); root.expanded = false }
                 }
@@ -78,6 +100,7 @@ Rectangle {
                 BarText { anchors.centerIn: parent; text: "Forget"; color: Theme.red; font.pixelSize: 11 }
                 MouseArea {
                     anchors.fill: parent
+                    enabled: !root.operationBusy && !BluetoothService.operationBusy
                     cursorShape: Qt.PointingHandCursor
                     onClicked: { root.forgetRequested(root.device); root.expanded = false }
                 }

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import Quickshell.Widgets
 
 Rectangle {
@@ -13,10 +14,39 @@ Rectangle {
     property var receivedAt: new Date()
     property var notificationObject: null
     property bool toast: false
+    // Toasts can grow for long messages, but should never take over the screen.
+    // Parents may bind this to a percentage of their screen height.
+    property real maximumHeight: 280
+    property int maximumBodyWords: 120
+    property bool dropShadow: false
     property real slideOffset: toast ? width : 0
     signal closeRequested(int notificationId)
     signal actionRequested(int notificationId, var action)
     signal defaultActionRequested(int notificationId)
+
+    readonly property string displayedBody: {
+        const clean = String(root.body || "").trim()
+        if (clean === "") return ""
+        const words = clean.split(/\s+/)
+        if (words.length <= root.maximumBodyWords) return clean
+        return words.slice(0, root.maximumBodyWords).join(" ") + "…"
+    }
+
+    readonly property var visibleActions: {
+        const result = []
+        if (!notificationObject || !notificationObject.actions)
+            return result
+
+        for (const action of notificationObject.actions) {
+            const identifier = String(action.identifier || "").trim()
+            const label = String(action.text || "").trim()
+            // "default" is invoked by clicking the card itself and must not
+            // appear as a separate button. Ignore malformed blank actions.
+            if (identifier !== "" && identifier !== "default" && label !== "")
+                result.push(action)
+        }
+        return result
+    }
 
     readonly property bool hasDefaultAction: {
         if (!notificationObject) return false
@@ -27,15 +57,25 @@ Rectangle {
 
     // Never derive this from a layout that fills us: that feedback loop caused
     // image-bearing Chromium notifications to grow into an almost full window.
-    implicitHeight: Math.max(toast ? 96 : 80,
+    implicitHeight: Math.max(toast ? 96 : 80, Math.min(root.maximumHeight,
         24 + appLabel.implicitHeight + 2 + summaryLabel.implicitHeight
-        + (root.body !== "" ? bodyText.implicitHeight + 2 : 0)
-        + (actionsRow.visible ? actionsRow.implicitHeight + 5 : 0))
+        + (root.displayedBody !== "" ? bodyText.implicitHeight + 2 : 0)
+        + (actionsRow.visible ? actionsRow.implicitHeight + 5 : 0)))
     radius: toast ? 12 : 14
     color: Theme.background
     border.width: 1
     border.color: Theme.border
     clip: true
+    layer.enabled: root.dropShadow
+    layer.effect: MultiEffect {
+        shadowEnabled: true
+        shadowColor: "#000000"
+        shadowOpacity: ShellSettings.shadowOpacity / 100
+        shadowBlur: ShellSettings.shadowBlur / 100
+        blurMax: 16
+        shadowVerticalOffset: 3
+        autoPaddingEnabled: true
+    }
     transform: Translate { x: root.slideOffset }
 
     Component.onCompleted: if (toast) enterAnimation.start()
@@ -124,13 +164,18 @@ Rectangle {
             BarText {
                 id: bodyText
                 Layout.fillWidth: true
-                visible: root.body !== ""
-                text: root.body
+                Layout.maximumHeight: Math.max(20, root.maximumHeight
+                    - 28 - appLabel.implicitHeight - summaryLabel.implicitHeight
+                    - (actionsRow.visible ? actionsRow.implicitHeight + 5 : 0))
+                visible: root.displayedBody !== ""
+                text: root.displayedBody
                 color: Theme.muted
                 font.pixelSize: 13
                 font.weight: Font.Normal
                 wrapMode: Text.Wrap
-                maximumLineCount: 2
+                // The height cap above remains the final guard. This line cap
+                // prevents pathological unbroken or extremely verbose bodies.
+                maximumLineCount: root.toast ? 18 : 10
                 elide: Text.ElideRight
                 textFormat: Text.PlainText
             }
@@ -139,9 +184,9 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.topMargin: 5
                 spacing: 6
-                visible: root.notificationObject && root.notificationObject.actions.length > 0
+                visible: root.visibleActions.length > 0
                 Repeater {
-                    model: root.notificationObject ? root.notificationObject.actions : []
+                    model: root.visibleActions
                     Rectangle {
                         required property var modelData
                         Layout.preferredHeight: 27

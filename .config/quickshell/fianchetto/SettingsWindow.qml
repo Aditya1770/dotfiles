@@ -11,6 +11,8 @@ FloatingWindow {
     property bool fontPickerOpen: false
     property bool showAllFonts: false
     property var installedFonts: []
+    property string pendingNotificationKey: ""
+    property var pendingNotificationValue
     visible: false
     title: "Fianchetto Settings"
     color: Theme.surface
@@ -31,6 +33,27 @@ FloatingWindow {
     function showPage(nextPage) {
         page = nextPage || "appearance"
         visible = true
+    }
+
+    function scheduleOsdGeometry(key, value) {
+        ShellSettings[key] = value
+        // Keep the existing OSD mapped while dragging. show() only refreshes
+        // its value and auto-hide timer, so the card follows the offset
+        // without replaying its entrance fade for every slider event.
+        OsdState.show("volume", 0.68, false)
+    }
+
+    function scheduleNotificationGeometry(key, value) {
+        NotificationService.beginPreviewChange()
+        pendingNotificationKey = key
+        pendingNotificationValue = value
+        notificationGeometryTimer.restart()
+    }
+
+    Timer {
+        id: notificationGeometryTimer
+        interval: 60
+        onTriggered: ShellSettings[root.pendingNotificationKey] = root.pendingNotificationValue
     }
 
     onPageChanged: {
@@ -104,6 +127,7 @@ FloatingWindow {
                             { key: "control", label: "Control Center", icon: "󰒓" },
                             { key: "bar", label: "Bar", icon: "󰍜" },
                             { key: "osd", label: "OSD", icon: "󰕾" },
+                            { key: "notifications", label: "Notifications", icon: "󰂚" },
                             { key: "wifi", label: "Wi‑Fi", icon: "󰤨" },
                             { key: "bluetooth", label: "Bluetooth", icon: "󰂯" },
                             { key: "nightlight", label: "Night Light", icon: "󰖔" },
@@ -171,6 +195,7 @@ FloatingWindow {
                                 : root.page === "control" ? "Control Center"
                                 : root.page === "bar" ? "Bar"
                                 : root.page === "osd" ? "OSD"
+                                : root.page === "notifications" ? "Notifications"
                                 : root.page === "wifi" ? "Wi‑Fi"
                                 : root.page === "bluetooth" ? "Bluetooth"
                                 : root.page === "nightlight" ? "Night Light"
@@ -182,6 +207,7 @@ FloatingWindow {
                                 : root.page === "control" ? "Choose what appears and where the action panel sits"
                                 : root.page === "bar" ? "Size and launcher presentation"
                                 : root.page === "osd" ? "Position, spacing and interaction"
+                                : root.page === "notifications" ? "Toast position and distance from the screen edge"
                                 : root.page === "wifi" ? "Wireless status and controls"
                                 : root.page === "bluetooth" ? "Adapter and connected-device status"
                                 : root.page === "nightlight" ? "Reduce blue light and tune screen warmth"
@@ -441,7 +467,7 @@ FloatingWindow {
                                                     hoverEnabled: true
                                                     cursorShape: Qt.PointingHandCursor
                                                     onClicked: {
-                                                        ShellSettings.osdPosition = parent.value
+                                                        root.scheduleOsdGeometry("osdPosition", parent.value)
                                                     }
                                                 }
                                             }
@@ -450,41 +476,187 @@ FloatingWindow {
                                 }
                             }
 
-                            Rectangle {
-                                Layout.fillWidth: true
-                                implicitHeight: 102
-                                radius: 18
-                                color: Theme.surfaceHover
-                                ColumnLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: 12
-                                    spacing: 2
-                                    RowLayout {
-                                        Layout.fillWidth: true
-                                        BarText { text: "Edge offset"; font.pixelSize: 14 }
-                                        Item { Layout.fillWidth: true }
-                                        BarText {
-                                            text: Math.round(ShellSettings.osdOffset) + " px"
-                                            color: Theme.pastelSky
-                                            font.pixelSize: 12
+                            Repeater {
+                                model: [
+                                    { label: "Horizontal offset", key: "osdHorizontalOffset", icon: "󰁍" },
+                                    { label: "Vertical offset", key: "osdVerticalOffset", icon: "󰁅" }
+                                ]
+                                Rectangle {
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    implicitHeight: 102
+                                    radius: 18
+                                    color: Theme.surfaceHover
+                                    ColumnLayout {
+                                        anchors.fill: parent
+                                        anchors.margins: 12
+                                        spacing: 2
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            BarText { text: modelData.label; font.pixelSize: 14 }
+                                            Item { Layout.fillWidth: true }
+                                            BarText {
+                                                text: Math.round(ShellSettings[modelData.key]) + " px"
+                                                color: Theme.pastelSky
+                                                font.pixelSize: 12
+                                            }
                                         }
-                                    }
-                                    SettingsSlider {
-                                        Layout.fillWidth: true
-                                        title: ""
-                                        icon: "󰆾"
-                                        showTitle: false
-                                        embedded: true
-                                        minimum: 0
-                                        maximum: 240
-                                        currentValue: ShellSettings.osdOffset
-                                        onValueMoved: value => ShellSettings.osdOffset = Math.round(value)
+                                        SettingsSlider {
+                                            Layout.fillWidth: true
+                                            title: ""
+                                            icon: modelData.icon
+                                            showTitle: false
+                                            embedded: true
+                                            minimum: 0
+                                            maximum: 240
+                                            currentValue: ShellSettings[modelData.key]
+                                            onValueMoved: value => {
+                                                root.scheduleOsdGeometry(modelData.key, Math.round(value))
+                                            }
+                                        }
                                     }
                                 }
                             }
 
                             BarText {
-                                text: "Offset is measured from the selected screen edge. OSD sliders support click and drag."
+                                text: "Offsets move independently on each axis. The OSD preview follows while dragging."
+                                color: Theme.muted
+                                font.pixelSize: 11
+                            }
+                        }
+
+                        ColumnLayout {
+                            visible: root.page === "notifications"
+                            Layout.fillWidth: true
+                            spacing: 12
+
+                            Rectangle {
+                                Layout.fillWidth: true; implicitHeight: 58; radius: 17; color: Theme.surfaceHover
+                                BarText { anchors.left: parent.left; anchors.leftMargin: 16; anchors.verticalCenter: parent.verticalCenter; text: "Notification shadow"; font.pixelSize: 14 }
+                                MaterialSwitch {
+                                    anchors.right: parent.right; anchors.rightMargin: 16; anchors.verticalCenter: parent.verticalCenter
+                                    checked: ShellSettings.notificationShadow; accent: Theme.pastelSky
+                                    onToggled: checked => ShellSettings.notificationShadow = checked
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: 184
+                                radius: 18
+                                color: Theme.surfaceHover
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 16
+                                    spacing: 10
+                                    BarText { text: "Toast position"; font.pixelSize: 14 }
+                                    GridLayout {
+                                        Layout.fillWidth: true
+                                        columns: 3
+                                        columnSpacing: 8
+                                        rowSpacing: 8
+                                        Repeater {
+                                            model: [
+                                                { label: "Top left", value: "top-left" },
+                                                { label: "Top center", value: "top-center" },
+                                                { label: "Top right", value: "top-right" },
+                                                { label: "Bottom left", value: "bottom-left" },
+                                                { label: "Bottom right", value: "bottom-right" }
+                                            ]
+                                            Rectangle {
+                                                required property var modelData
+                                                Layout.fillWidth: true
+                                                implicitHeight: 54
+                                                radius: 12
+                                                color: notificationPositionMouse.containsMouse ? Theme.border : Theme.background
+                                                border.width: ShellSettings.notificationPosition === modelData.value ? 2 : 1
+                                                border.color: ShellSettings.notificationPosition === modelData.value ? Theme.pastelSky : Theme.border
+                                                Column {
+                                                    anchors.centerIn: parent
+                                                    spacing: 5
+                                                    Rectangle {
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        width: 30
+                                                        height: 14
+                                                        radius: 5
+                                                        color: Theme.border
+                                                        Rectangle {
+                                                            width: 9
+                                                            height: 5
+                                                            radius: 3
+                                                            color: Theme.pastelSky
+                                                            anchors.top: modelData.value.startsWith("top-") ? parent.top : undefined
+                                                            anchors.bottom: modelData.value.startsWith("bottom-") ? parent.bottom : undefined
+                                                            anchors.left: modelData.value.endsWith("-left") ? parent.left : undefined
+                                                            anchors.right: modelData.value.endsWith("-right") ? parent.right : undefined
+                                                            anchors.horizontalCenter: modelData.value === "top-center" ? parent.horizontalCenter : undefined
+                                                        }
+                                                    }
+                                                    BarText {
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        text: modelData.label
+                                                        font.pixelSize: 10
+                                                    }
+                                                }
+                                                MouseArea {
+                                                    id: notificationPositionMouse
+                                                    anchors.fill: parent
+                                                    hoverEnabled: true
+                                                    cursorShape: Qt.PointingHandCursor
+                                                    onClicked: {
+                                                        root.scheduleNotificationGeometry("notificationPosition", parent.modelData.value)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Repeater {
+                                model: [
+                                    { label: "Horizontal offset", key: "notificationHorizontalOffset", icon: "󰁍" },
+                                    { label: "Vertical offset", key: "notificationVerticalOffset", icon: "󰁅" }
+                                ]
+                                Rectangle {
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    implicitHeight: 102
+                                    radius: 18
+                                    color: Theme.surfaceHover
+                                    ColumnLayout {
+                                        anchors.fill: parent
+                                        anchors.margins: 12
+                                        spacing: 2
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            BarText { text: modelData.label; font.pixelSize: 14 }
+                                            Item { Layout.fillWidth: true }
+                                            BarText {
+                                                text: Math.round(ShellSettings[modelData.key]) + " px"
+                                                color: Theme.pastelSky
+                                                font.pixelSize: 12
+                                            }
+                                        }
+                                        SettingsSlider {
+                                            Layout.fillWidth: true
+                                            title: ""
+                                            icon: modelData.icon
+                                            showTitle: false
+                                            embedded: true
+                                            minimum: 0
+                                            maximum: 240
+                                            currentValue: ShellSettings[modelData.key]
+                                            onValueMoved: value => {
+                                                root.scheduleNotificationGeometry(modelData.key, Math.round(value))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            BarText {
+                                text: "Offsets move independently on each axis. A preview notification follows while dragging."
                                 color: Theme.muted
                                 font.pixelSize: 11
                             }
@@ -577,6 +749,49 @@ FloatingWindow {
                                 Layout.fillWidth: true; implicitHeight: 58; radius: 17; color: Theme.surfaceHover
                                 BarText { anchors.left: parent.left; anchors.leftMargin: 16; anchors.verticalCenter: parent.verticalCenter; text: "Floating bar"; font.pixelSize: 14 }
                                 MaterialSwitch { anchors.right: parent.right; anchors.rightMargin: 16; anchors.verticalCenter: parent.verticalCenter; checked: ShellSettings.barFloating; accent: Theme.pastelSky; onToggled: checked => ShellSettings.barFloating = checked }
+                            }
+                            Rectangle {
+                                Layout.fillWidth: true; implicitHeight: 58; radius: 17; color: Theme.surfaceHover
+                                BarText { anchors.left: parent.left; anchors.leftMargin: 16; anchors.verticalCenter: parent.verticalCenter; text: "Bar shadow"; font.pixelSize: 14 }
+                                MaterialSwitch {
+                                    anchors.right: parent.right; anchors.rightMargin: 16; anchors.verticalCenter: parent.verticalCenter
+                                    checked: ShellSettings.barShadow; accent: Theme.pastelSky
+                                    onToggled: checked => ShellSettings.barShadow = checked
+                                }
+                            }
+                            Rectangle {
+                                Layout.fillWidth: true; implicitHeight: 118; radius: 17; color: Theme.surfaceHover
+                                ColumnLayout {
+                                    anchors.fill: parent; anchors.margins: 16; spacing: 8
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        BarText { text: "Shadow opacity"; Layout.fillWidth: true; font.pixelSize: 14 }
+                                        BarText { text: ShellSettings.shadowOpacity + "%"; color: Theme.pastelSky; font.pixelSize: 12 }
+                                    }
+                                    SettingsSlider {
+                                        Layout.fillWidth: true; Layout.preferredHeight: 54
+                                        showTitle: false; embedded: true; icon: "󰃟"; accent: Theme.pastelSky
+                                        minimum: 0; maximum: 80; currentValue: ShellSettings.shadowOpacity
+                                        onValueMoved: value => ShellSettings.shadowOpacity = Math.round(value)
+                                    }
+                                }
+                            }
+                            Rectangle {
+                                Layout.fillWidth: true; implicitHeight: 118; radius: 17; color: Theme.surfaceHover
+                                ColumnLayout {
+                                    anchors.fill: parent; anchors.margins: 16; spacing: 8
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        BarText { text: "Shadow softness"; Layout.fillWidth: true; font.pixelSize: 14 }
+                                        BarText { text: ShellSettings.shadowBlur + "%"; color: Theme.pastelSky; font.pixelSize: 12 }
+                                    }
+                                    SettingsSlider {
+                                        Layout.fillWidth: true; Layout.preferredHeight: 54
+                                        showTitle: false; embedded: true; icon: "󰒋"; accent: Theme.pastelSky
+                                        minimum: 10; maximum: 100; currentValue: ShellSettings.shadowBlur
+                                        onValueMoved: value => ShellSettings.shadowBlur = Math.round(value)
+                                    }
+                                }
                             }
                             Rectangle {
                                 Layout.fillWidth: true; implicitHeight: 118; radius: 17; color: Theme.surfaceHover

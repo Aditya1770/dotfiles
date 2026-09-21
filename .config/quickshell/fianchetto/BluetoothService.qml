@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Bluetooth
 
 Singleton {
@@ -20,8 +21,11 @@ Singleton {
         // have not supplied useful identity data yet. Hide those entries.
         return !/^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$/.test(name)
     })
-    property var pendingPairDevice: null
     property bool scanningRequested: false
+    property bool operationBusy: false
+    property string operationAddress: ""
+    property string operationKind: ""
+    property string operationError: ""
 
     function togglePower() {
         if (adapter) {
@@ -47,28 +51,48 @@ Singleton {
         onTriggered: root.scanningRequested = false
     }
 
+    function validAddress(device) {
+        if (!device) return ""
+        const address = String(device.address || "").trim().toUpperCase()
+        return /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(address) ? address : ""
+    }
+
+    function runDeviceAction(action, device) {
+        const address = validAddress(device)
+        if (!address || bluetoothAction.running)
+            return false
+
+        operationAddress = address
+        operationKind = action
+        operationError = ""
+        operationBusy = true
+        bluetoothAction.command = ["/bin/sh", Quickshell.shellPath("scripts/bluetooth-device.sh"), action, address]
+        bluetoothAction.running = true
+        return true
+    }
+
     function activateDevice(device) {
-        if (device.connected) device.disconnect()
-        else if (device.paired) device.connect()
-        else {
-            pendingPairDevice = device
-            device.pair()
-        }
+        if (!device) return
+        runDeviceAction(device.connected ? "disconnect" : device.paired ? "connect" : "pair", device)
     }
 
     function forgetDevice(device) {
         if (!device) return
 
-        const address = (device.address || "").trim().toUpperCase()
-        // Use BlueZ's command-line client directly here. On some Quickshell
-        // builds device.forget() returns without the adapter completing
-        // RemoveDevice, leaving the bond visible in Blueman.
-        if (!/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(address))
-            return
+        runDeviceAction("forget", device)
+    }
 
-        if (pendingPairDevice === device)
-            pendingPairDevice = null
-        Quickshell.execDetached(["bluetoothctl", "remove", address])
+    Process {
+        id: bluetoothAction
+        stdout: StdioCollector { id: bluetoothStdout }
+        stderr: StdioCollector { id: bluetoothStderr }
+        onExited: (exitCode, exitStatus) => {
+            root.operationBusy = false
+            root.operationError = exitCode === 0 ? ""
+                : (bluetoothStderr.text.trim() || bluetoothStdout.text.trim() || "Bluetooth operation failed")
+            if (root.enabled)
+                root.scanNow()
+        }
     }
 
     onScanningRequestedChanged: updateScanner()
@@ -78,15 +102,4 @@ Singleton {
         function onDefaultAdapterChanged() { root.updateScanner() }
     }
 
-    Connections {
-        target: root.pendingPairDevice
-        ignoreUnknownSignals: true
-        function onPairedChanged() {
-            if (root.pendingPairDevice && root.pendingPairDevice.paired) {
-                root.pendingPairDevice.trusted = true
-                root.pendingPairDevice.connect()
-                root.pendingPairDevice = null
-            }
-        }
-    }
 }

@@ -7,25 +7,30 @@ PanelWindow {
     required property var targetScreen
     screen: targetScreen
     readonly property bool vertical: ShellSettings.osdPosition === "left" || ShellSettings.osdPosition === "right"
+    readonly property int cardWidth: root.vertical ? 70 : 360
+    readonly property int cardHeight: root.vertical ? 300 : 70
     anchors {
-        top: ShellSettings.osdPosition === "top"
+        top: ShellSettings.osdPosition !== "bottom"
         bottom: ShellSettings.osdPosition === "bottom"
-        left: ShellSettings.osdPosition === "left"
+        left: ShellSettings.osdPosition !== "right"
         right: ShellSettings.osdPosition === "right"
     }
     margins {
-        top: ShellSettings.osdPosition === "top" ? ShellSettings.osdOffset : 0
-        bottom: ShellSettings.osdPosition === "bottom" ? ShellSettings.osdOffset : 0
-        left: ShellSettings.osdPosition === "left" ? ShellSettings.osdOffset : 0
-        right: ShellSettings.osdPosition === "right" ? ShellSettings.osdOffset : 0
+        top: ShellSettings.osdPosition === "top" ? ShellSettings.osdVerticalOffset
+            : root.vertical ? Math.max(0, (root.targetScreen.height - root.cardHeight) / 2 + ShellSettings.osdVerticalOffset) : 0
+        bottom: ShellSettings.osdPosition === "bottom" ? ShellSettings.osdVerticalOffset : 0
+        left: ShellSettings.osdPosition === "left" ? ShellSettings.osdHorizontalOffset
+            : !root.vertical ? Math.max(0, (root.targetScreen.width - root.cardWidth) / 2 + ShellSettings.osdHorizontalOffset) : 0
+        right: ShellSettings.osdPosition === "right" ? ShellSettings.osdHorizontalOffset : 0
     }
     exclusiveZone: 0
-    implicitWidth: root.vertical ? 70 : 360
-    implicitHeight: root.vertical ? 300 : 70
+    implicitWidth: root.cardWidth
+    implicitHeight: root.cardHeight
     color: "transparent"
     visible: OsdState.shown
 
     Rectangle {
+        id: osdCard
         anchors.fill: parent
         radius: 28
         color: Theme.background

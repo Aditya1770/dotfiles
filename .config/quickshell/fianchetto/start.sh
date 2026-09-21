@@ -26,14 +26,20 @@ if [ -d "$data_root/aditya-shell" ] && [ ! -e "$data_root/fianchetto" ]; then
 fi
 mkdir -p "$data_root/fianchetto"
 
-# Kill an older instance of this shell. Its executable is named `qs`, so
-# `pkill quickshell` does not release the notification D-Bus service.
-pkill -x qs 2>/dev/null || true
+# Ask Quickshell to stop its instances first, then fall back to signals. A
+# process left inside Qt's crash path may ignore TERM, so use KILL only after a
+# short grace period.
+qs kill >/dev/null 2>&1 || true
+pkill -TERM -x qs 2>/dev/null || true
+pkill -TERM -x quickshell 2>/dev/null || true
 attempt=0
-while pgrep -x qs >/dev/null 2>&1 && [ "$attempt" -lt 20 ]; do
+while { pgrep -x qs >/dev/null 2>&1 || pgrep -x quickshell >/dev/null 2>&1; } \
+    && [ "$attempt" -lt 20 ]; do
     sleep 0.05
     attempt=$((attempt + 1))
 done
+pkill -KILL -x qs 2>/dev/null || true
+pkill -KILL -x quickshell 2>/dev/null || true
 
 # Fianchetto owns org.freedesktop.Notifications. Stop competing notification
 # daemons before startup so its original notification manager can claim D-Bus.

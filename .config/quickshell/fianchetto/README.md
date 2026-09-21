@@ -58,7 +58,7 @@ For a Lua-based Hyprland configuration, use the equivalent commands with your `e
 
 ## Settings
 
-Open Settings from Control Center. Settings cover appearance, fonts, themes, Control Center modules, bar layout, OSD position and edge offset, Wi-Fi, Bluetooth, Night Light, and media animation.
+Open Settings from Control Center. Settings cover appearance, fonts, themes, Control Center modules, bar layout, OSD and notification placement, Wi-Fi, Bluetooth, Night Light, and media animation.
 
 Preferences are stored in:
 

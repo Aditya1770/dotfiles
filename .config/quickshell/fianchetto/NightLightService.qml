@@ -5,15 +5,15 @@ import Quickshell.Io
 
 Singleton {
     id: root
-    property bool enabled: false
-    property int temperature: 4000
+    readonly property bool enabled: ShellSettings.nightLightEnabled
+    readonly property int temperature: ShellSettings.nightLightTemperature
 
     function toggle() {
-        enabled = !enabled
+        ShellSettings.nightLightEnabled = !enabled
     }
 
     function setTemperature(value) {
-        temperature = Math.round(Math.max(1000, Math.min(6500, value)))
+        ShellSettings.nightLightTemperature = Math.round(Math.max(1000, Math.min(6500, value)))
         if (enabled)
             Quickshell.execDetached(["hyprctl", "hyprsunset", "temperature", String(temperature)])
     }
@@ -24,7 +24,7 @@ Singleton {
         running: root.enabled
         onExited: (exitCode, exitStatus) => {
             if (root.enabled && exitCode !== 0)
-                root.enabled = false
+                ShellSettings.nightLightEnabled = false
         }
     }
 }
