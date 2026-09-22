@@ -2,7 +2,9 @@ pragma Singleton
 import QtQuick
 
 QtObject {
-    readonly property bool custom: ShellSettings.scheme === "custom"
+    // Matugen uses the same JSON colour roles as imported themes. Its output
+    // is watched by CustomTheme, so wallpaper changes apply without a restart.
+    readonly property bool custom: ShellSettings.scheme === "custom" || ShellSettings.scheme === "matugen"
     readonly property color background: custom ? CustomTheme.background : ShellSettings.scheme === "oled" ? "#000000"
         : ShellSettings.scheme === "slate" ? "#0B1013" : "#070B0D"
     readonly property color surface: background

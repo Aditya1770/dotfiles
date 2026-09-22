@@ -37,6 +37,9 @@ Singleton {
     property alias nightLightEnabled: data.nightLightEnabled
     property alias nightLightTemperature: data.nightLightTemperature
     property alias themeFile: data.themeFile
+    property alias syncKittyTheme: data.syncKittyTheme
+    property alias syncHyprlandTheme: data.syncHyprlandTheme
+    property alias syncSpicetifyTheme: data.syncSpicetifyTheme
 
     signal settingsRequested(string page)
 
@@ -76,6 +79,9 @@ Singleton {
         nightLightEnabled = false
         nightLightTemperature = 4000
         themeFile = ""
+        syncKittyTheme = false
+        syncHyprlandTheme = false
+        syncSpicetifyTheme = false
     }
 
     Timer {
@@ -125,6 +131,9 @@ Singleton {
             property bool nightLightEnabled: false
             property int nightLightTemperature: 4000
             property string themeFile: ""
+            property bool syncKittyTheme: false
+            property bool syncHyprlandTheme: false
+            property bool syncSpicetifyTheme: false
         }
     }
 }

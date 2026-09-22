@@ -68,6 +68,36 @@ Preferences are stored in:
 
 Custom theme JSON files placed in `themes/` are detected automatically. Importing a file through Settings requires `zenity` or `kdialog`.
 
+### Wallpaper colours with Matugen and skwd-wall
+
+Install Matugen (`sudo pacman -S matugen`), then open **Settings → Appearance** and click **Install Matugen setup**. Select the **Matugen** colour scheme and, in skwd-wall, enable **Theme → Matugen command** and set **Theme → Colour source** to **Matugen**. Wallpaper changes then regenerate `~/.local/share/fianchetto/matugen.json`; Fianchetto watches that file and applies the new palette live.
+
+The installer preserves an existing Matugen configuration, adds only the `templates.fianchetto` entry, and creates a backup before changing it. It can also be run directly:
+
+```bash
+~/.config/quickshell/fianchetto/scripts/install-matugen-theme.sh
+```
+
+For reliable skwd-wall integration, enable its external Matugen command and use:
+
+```text
+/home/USER/.config/quickshell/fianchetto/scripts/skwd-matugen.sh "%path%"
+```
+
+Replace `USER` with the account name. The bridge selects the first extracted source colour non-interactively and logs every invocation to `~/.local/state/fianchetto/skwd-matugen.log`.
+
+### Application theme synchronization
+
+The **Application themes** switches under Appearance can synchronize every selected palette—including imported JSON themes and Matugen—with Kitty, Hyprland, and the Spicetify Text theme. Updates are debounced and unchanged output is not rewritten; Spicetify is only reapplied when its generated colour section changes.
+
+For Kitty, add this line once to `~/.config/kitty/kitty.conf`:
+
+```conf
+include fianchetto-theme.conf
+```
+
+Fianchetto applies Hyprland colours live and also writes `~/.config/hypr/fianchetto-theme.conf`. Spicetify integration preserves a one-time backup beside the Text theme's `color.ini`.
+
 The settings window uses the title `Fianchetto Settings` and Wayland class `org.quickshell`. A matching Hyprland rule can be used to float and centre it.
 
 ## Notes

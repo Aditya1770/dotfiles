@@ -34,8 +34,16 @@ Singleton {
     Timer {
         interval: 3000
         repeat: true
-        running: true
+        // Do not spawn the stats helper when the entire module is disabled.
+        running: ShellSettings.showSystemStats
         triggeredOnStart: true
         onTriggered: root.refresh()
+    }
+
+    Connections {
+        target: ShellSettings
+        function onShowSystemStatsChanged() {
+            if (ShellSettings.showSystemStats) root.refresh()
+        }
     }
 }

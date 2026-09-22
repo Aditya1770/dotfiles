@@ -4,6 +4,13 @@ import Quickshell
 import Quickshell.Io
 
 Singleton {
+    // Quickshell returns an undefined value rather than an empty string for
+    // unset environment variables on some builds. Test truthiness before
+    // using XDG_DATA_HOME so the fallback cannot collapse to `/fianchetto`.
+    readonly property string xdgDataHome: Quickshell.env("XDG_DATA_HOME") || ""
+    readonly property string dataHome: xdgDataHome.length > 0
+        ? xdgDataHome : Quickshell.env("HOME") + "/.local/share"
+    readonly property string matugenPath: dataHome + "/fianchetto/matugen.json"
     property alias background: data.background
     property alias surfaceHover: data.surfaceHover
     property alias border: data.border
@@ -19,9 +26,16 @@ Singleton {
     property alias powerRed: data.powerRed
 
     FileView {
-        path: ShellSettings.themeFile !== "" ? ShellSettings.themeFile : Quickshell.shellPath("theme.json")
+        id: themeFile
+        path: ShellSettings.scheme === "matugen" ? matugenPath
+            : ShellSettings.themeFile !== "" ? ShellSettings.themeFile
+            : Quickshell.shellPath("theme.json")
         watchChanges: true
-        blockLoading: true
+        preload: true
+        // Matugen replaces its output file when rendering a new wallpaper.
+        // Explicitly reload on that filesystem event; watchChanges alone does
+        // not cause JsonAdapter properties to be reparsed on every QS build.
+        onFileChanged: reload()
         adapter: JsonAdapter {
             id: data
             property string background: "#070B0D"

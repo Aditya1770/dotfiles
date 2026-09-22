@@ -240,7 +240,8 @@ FloatingWindow {
                                             model: [
                                                 { id: "fianchetto", name: "Fianchetto", bg: "#070B0D", accent: "#67B0E8" },
                                                 { id: "oled", name: "OLED", bg: "#000000", accent: "#7BC8F6" },
-                                                { id: "slate", name: "Slate", bg: "#0B1013", accent: "#8AB4D6" }
+                                                { id: "slate", name: "Slate", bg: "#0B1013", accent: "#8AB4D6" },
+                                                { id: "matugen", name: "Matugen", bg: "#101418", accent: "#8FCDF4" }
                                             ].concat(ThemeManager.themes)
                                             Rectangle {
                                                 required property var modelData
@@ -295,6 +296,89 @@ FloatingWindow {
                                         }
                                     }
                                     BarText { visible: ThemeManager.error !== ""; text: ThemeManager.error; color: Theme.red; font.pixelSize: 11 }
+                                }
+                            }
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: 104
+                                radius: 20
+                                color: Theme.surfaceHover
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 18
+                                    spacing: 14
+                                    IconText { text: "󰏘"; color: Theme.pastelSky; font.pixelSize: 22 }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 3
+                                        BarText { text: "Wallpaper colours"; font.pixelSize: 16 }
+                                        BarText {
+                                            Layout.fillWidth: true
+                                            text: "Install the template once, then enable Matugen command and Matugen colour source in skwd-wall."
+                                            color: Theme.muted
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                        }
+                                        BarText {
+                                            visible: ThemeManager.matugenStatus !== ""
+                                            text: ThemeManager.matugenStatus
+                                            color: Theme.pastelMint
+                                            font.pixelSize: 11
+                                        }
+                                    }
+                                    MaterialButton {
+                                        label: ThemeManager.installingMatugen ? "Installing…" : "Install Matugen setup"
+                                        accent: Theme.pastelSky
+                                        onClicked: ThemeManager.installMatugen()
+                                    }
+                                }
+                            }
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: 202
+                                radius: 20
+                                color: Theme.surfaceHover
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 18
+                                    spacing: 8
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        BarText { text: "Application themes"; font.pixelSize: 16; Layout.fillWidth: true }
+                                        MaterialButton {
+                                            label: ThemeManager.syncingApps ? "Applying…" : "Apply now"
+                                            accent: Theme.pastelSky
+                                            onClicked: ThemeManager.syncIntegrations()
+                                        }
+                                    }
+                                    BarText {
+                                        text: "Keep supported applications on the selected Fianchetto palette."
+                                        color: Theme.muted
+                                        font.pixelSize: 11
+                                    }
+                                    Repeater {
+                                        model: [
+                                            { label: "Kitty", key: "syncKittyTheme", accent: Theme.pastelSky },
+                                            { label: "Hyprland", key: "syncHyprlandTheme", accent: Theme.pastelLilac },
+                                            { label: "Spicetify Text", key: "syncSpicetifyTheme", accent: Theme.pastelMint }
+                                        ]
+                                        RowLayout {
+                                            required property var modelData
+                                            Layout.fillWidth: true
+                                            BarText { text: modelData.label; Layout.fillWidth: true; font.pixelSize: 13 }
+                                            MaterialSwitch {
+                                                checked: ShellSettings[modelData.key]
+                                                accent: modelData.accent
+                                                onToggled: value => ShellSettings[modelData.key] = value
+                                            }
+                                        }
+                                    }
+                                    BarText {
+                                        visible: ThemeManager.integrationStatus !== ""
+                                        text: ThemeManager.integrationStatus
+                                        color: Theme.muted
+                                        font.pixelSize: 10
+                                    }
                                 }
                             }
                             Rectangle {

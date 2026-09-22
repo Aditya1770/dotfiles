@@ -1,0 +1,15 @@
+{
+  "background": "{{colors.background.default.hex}}",
+  "surfaceHover": "{{colors.surface_container.default.hex}}",
+  "border": "{{colors.outline_variant.default.hex}}",
+  "text": "{{colors.on_background.default.hex}}",
+  "muted": "{{colors.on_surface_variant.default.hex}}",
+  "accent": "{{colors.primary.default.hex}}",
+  "sky": "{{colors.primary.default.hex}}",
+  "mint": "{{colors.secondary.default.hex}}",
+  "lilac": "{{colors.tertiary.default.hex}}",
+  "peach": "{{colors.secondary_fixed_dim.default.hex}}",
+  "rose": "{{colors.tertiary_fixed_dim.default.hex}}",
+  "butter": "{{colors.primary_fixed.default.hex}}",
+  "powerRed": "{{colors.error.default.hex}}"
+}

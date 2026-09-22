@@ -2,6 +2,8 @@
 
 Theme files contain the shell background roles followed by six coordinated icon shades.
 
+For wallpaper-generated colours, install Matugen and use **Settings → Appearance → Install Matugen setup**. The generated palette is watched at `~/.local/share/fianchetto/matugen.json` and can be selected with the **Matugen** scheme.
+
 ## Install a scheme
 
 Copy a bundled or downloaded scheme over `theme.json`:
