@@ -7,8 +7,11 @@ PanelWindow {
     required property var targetScreen
     screen: targetScreen
     readonly property bool vertical: ShellSettings.osdPosition === "left" || ShellSettings.osdPosition === "right"
-    readonly property int cardWidth: root.vertical ? 70 : 360
-    readonly property int cardHeight: root.vertical ? 300 : 70
+    readonly property int windowWidth: root.vertical ? 70 : 471
+    readonly property int windowHeight: root.vertical ? 395 : 70
+    readonly property int cardWidth: root.vertical ? 70 : (OsdState.volumeBoosted ? 471 : 360)
+    readonly property int cardHeight: root.vertical ? (OsdState.volumeBoosted ? 395 : 300) : 70
+    property bool surfaceVisible: OsdState.shown
     anchors {
         top: ShellSettings.osdPosition !== "bottom"
         bottom: ShellSettings.osdPosition === "bottom"
@@ -17,24 +20,46 @@ PanelWindow {
     }
     margins {
         top: ShellSettings.osdPosition === "top" ? ShellSettings.osdVerticalOffset
-            : root.vertical ? Math.max(0, (root.targetScreen.height - root.cardHeight) / 2 + ShellSettings.osdVerticalOffset) : 0
+            : root.vertical ? Math.max(0, (root.targetScreen.height - root.windowHeight) / 2 + ShellSettings.osdVerticalOffset) : 0
         bottom: ShellSettings.osdPosition === "bottom" ? ShellSettings.osdVerticalOffset : 0
         left: ShellSettings.osdPosition === "left" ? ShellSettings.osdHorizontalOffset
-            : !root.vertical ? Math.max(0, (root.targetScreen.width - root.cardWidth) / 2 + ShellSettings.osdHorizontalOffset) : 0
+            : !root.vertical ? Math.max(0, (root.targetScreen.width - root.windowWidth) / 2 + ShellSettings.osdHorizontalOffset) : 0
         right: ShellSettings.osdPosition === "right" ? ShellSettings.osdHorizontalOffset : 0
     }
     exclusiveZone: 0
-    implicitWidth: root.cardWidth
-    implicitHeight: root.cardHeight
+    implicitWidth: root.windowWidth
+    implicitHeight: root.windowHeight
     color: "transparent"
-    visible: OsdState.shown
+    visible: root.surfaceVisible
+
+    Connections {
+        target: OsdState
+        function onShownChanged() {
+            if (OsdState.shown) {
+                surfaceHideTimer.stop()
+                root.surfaceVisible = true
+            } else {
+                surfaceHideTimer.restart()
+            }
+        }
+    }
+
+    Timer {
+        id: surfaceHideTimer
+        interval: 210
+        onTriggered: root.surfaceVisible = false
+    }
 
     Rectangle {
         id: osdCard
-        anchors.fill: parent
+        anchors.centerIn: parent
+        width: root.cardWidth
+        height: root.cardHeight
         radius: 28
         color: Theme.background
         border.width: 0
+        Behavior on width { NumberAnimation { duration: 190; easing.type: Easing.OutCubic } }
+        Behavior on height { NumberAnimation { duration: 190; easing.type: Easing.OutCubic } }
 
         RowLayout {
             visible: OsdState.kind !== "profile" && !root.vertical
@@ -49,7 +74,7 @@ PanelWindow {
                 radius: 21
                 color: Theme.border
 
-                VectorIcon { anchors.centerIn: parent; path: OsdState.levelIconPath; iconColor: Theme.blue }
+                VectorIcon { anchors.centerIn: parent; path: OsdState.levelIconPath; iconColor: OsdState.levelAccent }
             }
 
             Rectangle {
@@ -59,17 +84,28 @@ PanelWindow {
                 radius: 6
                 color: Theme.border
                 Rectangle {
-                    width: parent.width * OsdState.value
+                    width: parent.width * OsdState.value / OsdState.levelMaximum
                     height: parent.height
                     radius: parent.radius
-                    color: Theme.blue
-                    Behavior on width { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+                    color: OsdState.levelAccent
+                    Behavior on width { NumberAnimation { duration: 160; easing.type: Easing.OutQuart } }
+                }
+                Rectangle {
+                    visible: OsdState.volumeBoosted
+                    x: parent.width / 1.5 - width / 2
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 2
+                    height: parent.height + 6
+                    radius: 1
+                    color: Theme.foreground
+                    opacity: 0.55
                 }
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     function applyPosition(px) {
-                        const value = Math.max(0, Math.min(1, px / width))
+                        const maximum = OsdState.kind === "volume" ? OsdState.levelMaximum : 1
+                        const value = Math.max(0, Math.min(maximum, px / width * maximum))
                         if (OsdState.kind === "brightness") BrightnessService.setBrightness(value)
                         else AudioService.setVolume(value)
                     }
@@ -82,7 +118,7 @@ PanelWindow {
                 Layout.preferredWidth: 38
                 horizontalAlignment: Text.AlignRight
                 text: Math.round(OsdState.value * 100) + "%"
-                color: Theme.blue
+                color: OsdState.levelAccent
                 font.pixelSize: 13
             }
         }
@@ -102,7 +138,7 @@ PanelWindow {
                 Layout.preferredHeight: 42
                 radius: 21
                 color: Theme.border
-                VectorIcon { anchors.centerIn: parent; path: OsdState.levelIconPath; iconColor: Theme.blue }
+                VectorIcon { anchors.centerIn: parent; path: OsdState.levelIconPath; iconColor: OsdState.levelAccent }
             }
 
             Rectangle {
@@ -115,16 +151,27 @@ PanelWindow {
                 Rectangle {
                     anchors.bottom: parent.bottom
                     width: parent.width
-                    height: parent.height * OsdState.value
+                    height: parent.height * OsdState.value / OsdState.levelMaximum
                     radius: parent.radius
-                    color: Theme.blue
-                    Behavior on height { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+                    color: OsdState.levelAccent
+                    Behavior on height { NumberAnimation { duration: 160; easing.type: Easing.OutQuart } }
+                }
+                Rectangle {
+                    visible: OsdState.volumeBoosted
+                    y: parent.height / 3 - height / 2
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width + 6
+                    height: 2
+                    radius: 1
+                    color: Theme.foreground
+                    opacity: 0.55
                 }
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     function applyPosition(py) {
-                        const value = Math.max(0, Math.min(1, 1 - py / height))
+                        const maximum = OsdState.kind === "volume" ? OsdState.levelMaximum : 1
+                        const value = Math.max(0, Math.min(maximum, (1 - py / height) * maximum))
                         if (OsdState.kind === "brightness") BrightnessService.setBrightness(value)
                         else AudioService.setVolume(value)
                     }
@@ -138,7 +185,7 @@ PanelWindow {
                 Layout.preferredWidth: 54
                 horizontalAlignment: Text.AlignHCenter
                 text: Math.round(OsdState.value * 100) + "%"
-                color: Theme.blue
+                color: OsdState.levelAccent
                 font.pixelSize: 12
             }
         }
@@ -202,7 +249,7 @@ PanelWindow {
 
         opacity: OsdState.shown ? 1 : 0
         scale: OsdState.shown ? 1 : 0.96
-        Behavior on opacity { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack } }
+        Behavior on opacity { NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: 190; easing.type: Easing.OutCubic } }
     }
 }

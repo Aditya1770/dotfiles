@@ -79,7 +79,7 @@ hl.window_rule({
 --     match = { class = ".*" },
 --     center = true,
 -- })
---
+
 
 -- Smart gaps
 hl.workspace_rule({
@@ -178,4 +178,17 @@ hl.window_rule({
     name = "waydroid-fullscreen",
     match = { class = "Waydroid" },
     fullscreen = true,
+})
+
+hl.window_rule({
+    name = "spotify-workspace-3",
+    match = { class = "Spotify"},
+    workspace = "3",
+})
+
+
+hl.window_rule({
+    name = "spotify-workspace-3",
+    match = { class = "Discord"},
+    workspace = "2",
 })

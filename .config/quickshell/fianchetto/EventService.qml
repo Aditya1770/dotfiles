@@ -22,6 +22,8 @@ Singleton {
         Quickshell.execDetached([Quickshell.shellPath("scripts/event-store.sh"), "add", dateKey, clean])
         eventModel.append({ dateKey: dateKey, title: clean })
         revision++
+        if (dateKey === Qt.formatDate(new Date(), "yyyy-MM-dd"))
+            reminderDelay.restart()
     }
 
     function remove(dateKey, title) {
@@ -59,6 +61,13 @@ Singleton {
         return best
     }
 
+    function checkReminders() {
+        if (!ShellSettings.calendarEventNotifications || loader.running || reminderChecker.running)
+            return
+        reminderChecker.command = [Quickshell.shellPath("scripts/event-store.sh"), "pending", Qt.formatDate(new Date(), "yyyy-MM-dd")]
+        reminderChecker.running = true
+    }
+
     ListModel { id: eventModel }
     Process {
         id: loader
@@ -70,6 +79,36 @@ Singleton {
                 eventModel.append({ dateKey: line.slice(0, separator), title: line.slice(separator + 1) })
                 root.revision++
             }
+        }
+        onExited: reminderDelay.restart()
+    }
+    Process {
+        id: reminderChecker
+        stdout: SplitParser {
+            onRead: title => {
+                const clean = title.trim()
+                if (clean === "") return
+                const today = Qt.formatDate(new Date(), "yyyy-MM-dd")
+                Quickshell.execDetached(["notify-send", "-a", "Fianchetto Calendar", "-i", "x-office-calendar", "Calendar event", clean])
+                Quickshell.execDetached([Quickshell.shellPath("scripts/event-store.sh"), "mark", today, clean])
+            }
+        }
+    }
+    Timer {
+        id: reminderDelay
+        interval: 1200
+        onTriggered: root.checkReminders()
+    }
+    Timer {
+        interval: 60000
+        running: true
+        repeat: true
+        onTriggered: root.checkReminders()
+    }
+    Connections {
+        target: ShellSettings
+        function onCalendarEventNotificationsChanged() {
+            if (ShellSettings.calendarEventNotifications) reminderDelay.restart()
         }
     }
     Component.onCompleted: refresh()

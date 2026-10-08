@@ -16,8 +16,12 @@ Singleton {
     property alias showSystemStats: data.showSystemStats
     property alias animatedEqualizer: data.animatedEqualizer
     property alias equalizerSpeed: data.equalizerSpeed
+    property alias mediaScrollTrackChange: data.mediaScrollTrackChange
+    property alias calendarEventNotifications: data.calendarEventNotifications
     property alias barWidth: data.barWidth
     property alias launcherIcon: data.launcherIcon
+    property alias launcherSortMode: data.launcherSortMode
+    property alias launcherUsage: data.launcherUsage
     property alias barHeight: data.barHeight
     property alias barRadius: data.barRadius
     property alias barCornerMode: data.barCornerMode
@@ -38,8 +42,11 @@ Singleton {
     property alias nightLightTemperature: data.nightLightTemperature
     property alias themeFile: data.themeFile
     property alias syncKittyTheme: data.syncKittyTheme
+    property alias syncFishTheme: data.syncFishTheme
     property alias syncHyprlandTheme: data.syncHyprlandTheme
     property alias syncSpicetifyTheme: data.syncSpicetifyTheme
+    property alias syncNeovimTheme: data.syncNeovimTheme
+    property alias bluetoothAutoConnectDevices: data.bluetoothAutoConnectDevices
 
     signal settingsRequested(string page)
 
@@ -58,8 +65,11 @@ Singleton {
         showSystemStats = true
         animatedEqualizer = true
         equalizerSpeed = 1.0
+        mediaScrollTrackChange = true
+        calendarEventNotifications = true
         barWidth = 100
         launcherIcon = "󰊠"
+        launcherSortMode = "usage"
         barHeight = 36
         barRadius = 12
         barCornerMode = "always"
@@ -80,8 +90,11 @@ Singleton {
         nightLightTemperature = 4000
         themeFile = ""
         syncKittyTheme = false
+        syncFishTheme = false
         syncHyprlandTheme = false
         syncSpicetifyTheme = false
+        syncNeovimTheme = false
+        bluetoothAutoConnectDevices = []
     }
 
     Timer {
@@ -110,8 +123,12 @@ Singleton {
             property bool showSystemStats: true
             property bool animatedEqualizer: true
             property real equalizerSpeed: 1.0
+            property bool mediaScrollTrackChange: true
+            property bool calendarEventNotifications: true
             property int barWidth: 100
             property string launcherIcon: "󰊠"
+            property string launcherSortMode: "usage"
+            property var launcherUsage: ({})
             property int barHeight: 36
             property int barRadius: 12
             property string barCornerMode: "always"
@@ -132,8 +149,11 @@ Singleton {
             property int nightLightTemperature: 4000
             property string themeFile: ""
             property bool syncKittyTheme: false
+            property bool syncFishTheme: false
             property bool syncHyprlandTheme: false
             property bool syncSpicetifyTheme: false
+            property bool syncNeovimTheme: false
+            property var bluetoothAutoConnectDevices: []
         }
     }
 }

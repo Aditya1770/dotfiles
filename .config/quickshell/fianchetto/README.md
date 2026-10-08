@@ -8,11 +8,21 @@ Install the required packages on Arch Linux:
 
 ```bash
 sudo pacman -S quickshell upower networkmanager bluez-utils pipewire wireplumber \
-  brightnessctl hyprsunset papirus-icon-theme wl-clipboard cliphist \
+  brightnessctl hyprsunset papirus-icon-theme wl-clipboard cliphist libnotify \
   curl python kitty ttf-nerd-fonts-symbols-mono
 ```
 
 The screenshot shortcut uses `grimblast`. Importing theme files requires either `zenity` or `kdialog`. Performance-mode controls are only available on supported Acer Predator laptops with Linuwu-Sense.
+
+### Optional passwordless performance-mode switching
+
+This permission is deliberately not installed with the shell or a normal dotfiles setup. On a supported Predator laptop, opt in explicitly with:
+
+```bash
+~/.config/quickshell/fianchetto/scripts/install-power-profile-helper.sh --install
+```
+
+The installer creates the `fianchetto-shell` system group, adds only the invoking desktop user, and installs a root-owned helper restricted to the supported platform-profile names. Log out and back in once after installation. Other users of the dotfiles receive no system permission changes unless they run this command themselves.
 
 Make sure NetworkManager, Bluetooth, PipeWire, and WirePlumber are running. Fianchetto provides its own notification server, so disable other notification daemons such as SwayNC, Mako, or Dunst.
 
@@ -60,6 +70,12 @@ For a Lua-based Hyprland configuration, use the equivalent commands with your `e
 
 Open Settings from Control Center. Settings cover appearance, fonts, themes, Control Center modules, bar layout, OSD and notification placement, Wi-Fi, Bluetooth, Night Light, and media animation.
 
+Under **Settings → Media**, scroll-to-change-track can be enabled or disabled. Scrolling up over the bar's Spotify pill selects the next track; scrolling down selects the previous track. **Settings → Notifications** includes calendar reminders. Since calendar entries store a date rather than a time, each event is notified once on its date, including when the shell starts later that day.
+
+The volume OSD supports PipeWire output boost up to 150%. At 100%, press volume-up three times in quick succession to enter boost mode. Above 100%, the OSD expands, marks the normal-volume boundary, and uses the theme's violet accent for a clear boost warning.
+
+The OSD keeps a stable layer-shell surface until its animation finishes, preventing Wayland resize flashes and abrupt exit clipping.
+
 Preferences are stored in:
 
 ```text
@@ -88,7 +104,7 @@ Replace `USER` with the account name. The bridge selects the first extracted sou
 
 ### Application theme synchronization
 
-The **Application themes** switches under Appearance can synchronize every selected palette—including imported JSON themes and Matugen—with Kitty, Hyprland, and the Spicetify Text theme. Updates are debounced and unchanged output is not rewritten; Spicetify is only reapplied when its generated colour section changes.
+The **Application themes** switches under Appearance can synchronize every selected palette—including imported JSON themes and Matugen—with Kitty, Fish, Hyprland, and Spicetify. Fish receives a generated `Fianchetto.theme`, selected through `fish_config`, so Fianchetto does not modify `config.fish` or delete existing themes. Spicetify uses the installed `FianchettoText` theme for every palette and adds a softly tinted `FianchettoDynamic` colour scheme for generated themes. The Neovim switch is Matugen-only: it writes `lua/config/fianchetto.lua` while Matugen is selected, and removes it when another scheme is selected so [Aditya1770/neovim-config](https://github.com/Aditya1770/neovim-config) returns to its regular Night theme and original overrides. Automatic updates are debounced; **Apply now** forces an application refresh.
 
 For Kitty, add this line once to `~/.config/kitty/kitty.conf`:
 
@@ -102,8 +118,9 @@ The settings window uses the title `Fianchetto Settings` and Wayland class `org.
 
 ## Notes
 
-- `SUPER + D` opens the launcher. Prefix a query with `>` to run it in Kitty.
+- `SUPER + D` opens the launcher. It can order applications by most used or by name from Settings → Launcher. Prefix a query with `>` to run it in Kitty.
 - Fianchetto owns `org.freedesktop.Notifications` and stores notifications in Control Center.
+- Paired Bluetooth devices can opt into Auto-connect from their expanded device card. Fianchetto remembers the choice and retries quietly when the device becomes available.
 - Weather location can be changed in `UserConfig.qml`.
 - Calendar events are stored in `~/.local/share/fianchetto/events.tsv`.
 - Pinned clipboard entries are stored in `~/.local/share/fianchetto/pinned-clipboard`.

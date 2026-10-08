@@ -1,0 +1,12 @@
+polkit.addRule(function(action, subject) {
+    if (action.id !== "org.freedesktop.policykit.exec")
+        return polkit.Result.NOT_HANDLED;
+
+    if (action.lookup("program") !== "/usr/local/libexec/fianchetto-power-profile")
+        return polkit.Result.NOT_HANDLED;
+
+    if (subject.local && subject.active && subject.isInGroup("fianchetto-shell"))
+        return polkit.Result.YES;
+
+    return polkit.Result.NOT_HANDLED;
+});

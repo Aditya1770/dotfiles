@@ -8,11 +8,14 @@ Singleton {
     property real brightness: 0
     property real pendingBrightness: 0
     property bool initialized: false
+    property bool localAdjustmentActive: false
 
     function setBrightness(value) {
         const clamped = Math.max(0.01, Math.min(1, value))
         brightness = clamped
         pendingBrightness = clamped
+        localAdjustmentActive = true
+        adjustmentSettleTimer.restart()
         OsdState.show("brightness", clamped, false)
         writeTimer.restart()
     }
@@ -23,6 +26,10 @@ Singleton {
             const percentage = Number(fields[3].replace("%", ""))
             if (!isNaN(percentage)) {
                 const nextBrightness = percentage / 100
+                if (localAdjustmentActive) {
+                    initialized = true
+                    return
+                }
                 if (initialized && Math.abs(nextBrightness - brightness) > 0.005)
                     OsdState.show("brightness", nextBrightness, false)
                 brightness = nextBrightness
@@ -45,6 +52,14 @@ Singleton {
             if (setter.running) { restart(); return }
             setter.command = ["brightnessctl", "-c", "backlight", "set", Math.round(root.pendingBrightness * 100) + "%"]
             setter.running = true
+        }
+    }
+    Timer {
+        id: adjustmentSettleTimer
+        interval: 240
+        onTriggered: {
+            root.localAdjustmentActive = false
+            if (!reader.running && !setter.running) reader.running = true
         }
     }
     Timer { interval: 2000; running: true; repeat: true; onTriggered: if (!reader.running && !setter.running) reader.running = true }

@@ -15,6 +15,10 @@ alias lta='eza --icons -a -T'
 alias cat='bat'
 alias man='batman'
 
+alias i='yay -S'
+alias u='yay'
+alias r='yay -Rns'
+
 function y
 	set tmp (mktemp -t "yazi-cwd.XXXXXX")
 	yazi $argv --cwd-file="$tmp"
@@ -63,3 +67,7 @@ end
 
 fish_add_path /home/aditya/.spicetify
 alias fetch=fastfetch
+
+
+set -U fish_color_valid_path $fish_color_param --underline
+commandline -f repaint

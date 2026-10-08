@@ -11,6 +11,10 @@ QtObject {
     property string profileLabel: ""
     property string profileIcon: ""
     property color profileAccent: Theme.blue
+    property int boostPressCount: 0
+    readonly property bool volumeBoosted: kind === "volume" && value > 1.001
+    readonly property real levelMaximum: volumeBoosted ? 1.5 : 1
+    readonly property color levelAccent: volumeBoosted ? Theme.purple : Theme.blue
     readonly property string levelIcon: {
         if (kind === "brightness") {
             if (value < 0.34) return "󰃞"
@@ -35,7 +39,8 @@ QtObject {
 
     function show(nextKind, nextValue, nextMuted) {
         kind = nextKind
-        value = Math.max(0, Math.min(1, nextValue))
+        const maximum = nextKind === "volume" ? 1.5 : 1
+        value = Math.max(0, Math.min(maximum, nextValue))
         muted = Boolean(nextMuted)
         shown = true
         hideTimer.restart()
@@ -55,10 +60,34 @@ QtObject {
         onTriggered: root.shown = false
     }
 
+    property Timer boostPressResetTimer: Timer {
+        interval: 900
+        onTriggered: root.boostPressCount = 0
+    }
+
     property IpcHandler ipc: IpcHandler {
         target: "osd"
-        function volumeUp(): void { AudioService.setVolume(AudioService.volume + 0.05) }
-        function volumeDown(): void { AudioService.setVolume(AudioService.volume - 0.05) }
+        function volumeUp(): void {
+            if (AudioService.volume >= 0.995 && AudioService.volume <= 1.001) {
+                root.boostPressCount++
+                root.boostPressResetTimer.restart()
+                if (root.boostPressCount < 3) {
+                    root.show("volume", 1, AudioService.muted)
+                    return
+                }
+                root.boostPressCount = 0
+                root.boostPressResetTimer.stop()
+                AudioService.setVolume(1.05)
+                return
+            }
+            root.boostPressCount = 0
+            AudioService.setVolume(AudioService.volume + 0.05)
+        }
+        function volumeDown(): void {
+            root.boostPressCount = 0
+            root.boostPressResetTimer.stop()
+            AudioService.setVolume(AudioService.volume - 0.05)
+        }
         function volumeMute(): void { AudioService.toggleMute() }
         function brightnessUp(): void { BrightnessService.setBrightness(BrightnessService.brightness + 0.05) }
         function brightnessDown(): void { BrightnessService.setBrightness(BrightnessService.brightness - 0.05) }

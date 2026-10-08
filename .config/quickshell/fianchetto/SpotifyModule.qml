@@ -6,6 +6,7 @@ import Quickshell.Widgets
 Pill {
     id: root
     property bool compact: false
+    property int wheelAccumulator: 0
 
     function findSpotify() {
         const players = Mpris.players.values
@@ -51,6 +52,24 @@ Pill {
         } else if (button === Qt.LeftButton) {
             popup.visible = !popup.visible
         }
+    }
+    onWheel: delta => {
+        if (!ShellSettings.mediaScrollTrackChange || !root.player || delta === 0) return
+        root.wheelAccumulator += delta
+        wheelReset.restart()
+        if (root.wheelAccumulator >= 120) {
+            root.wheelAccumulator = 0
+            if (root.player.canGoNext) root.player.next()
+        } else if (root.wheelAccumulator <= -120) {
+            root.wheelAccumulator = 0
+            if (root.player.canGoPrevious) root.player.previous()
+        }
+    }
+
+    Timer {
+        id: wheelReset
+        interval: 260
+        onTriggered: root.wheelAccumulator = 0
     }
 
     Timer {

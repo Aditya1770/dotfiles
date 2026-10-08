@@ -2,4 +2,32 @@
 # VERSION: 3.0
 SETUVAR --export LIBVA_DRIVER_NAME:mesa
 SETUVAR __fish_initialized:4300
+SETUVAR fish_color_autosuggestion:\x2d\x2d\x1eb3b9b8
+SETUVAR fish_color_cancel:\x2d\x2d\x1ef19aa3
+SETUVAR fish_color_command:\x2d\x2d\x1e8fcdf4
+SETUVAR fish_color_comment:\x2d\x2d\x1eb3b9b8
+SETUVAR fish_color_cwd:\x2d\x2d\x1e8fcdf4
+SETUVAR fish_color_cwd_root:\x2d\x2d\x1ef19aa3
+SETUVAR fish_color_end:\x2d\x2d\x1e88b7e3
+SETUVAR fish_color_error:\x2d\x2d\x1ef19aa3
+SETUVAR fish_color_escape:\x2d\x2d\x1e88b7e3
+SETUVAR fish_color_history_current:\x1d
+SETUVAR fish_color_host:\x2d\x2d\x1eb3b9b8
+SETUVAR fish_color_keyword:\x2d\x2d\x1ea8c8f2
+SETUVAR fish_color_normal:\x2d\x2d\x1edadada
+SETUVAR fish_color_operator:\x2d\x2d\x1e70aedd
+SETUVAR fish_color_option:\x2d\x2d\x1e79bfe5
+SETUVAR fish_color_param:\x2d\x2d\x1edadada
+SETUVAR fish_color_quote:\x2d\x2d\x1eb5d9f5
+SETUVAR fish_color_redirection:\x2d\x2d\x1e70aedd
+SETUVAR fish_color_search_match:\x2d\x2d\x1edadada\x1e\x2d\x2dbackground\x3d11191b
+SETUVAR fish_color_selection:\x2d\x2d\x1edadada\x1e\x2d\x2dbackground\x3d11191b
+SETUVAR fish_color_status:\x1d
+SETUVAR fish_color_user:\x2d\x2d\x1ea8c8f2
+SETUVAR fish_color_valid_path:bd93f9\x1e\x2d\x2dunderline
+SETUVAR fish_pager_color_completion:\x2d\x2d\x1edadada
+SETUVAR fish_pager_color_description:\x2d\x2d\x1eb3b9b8
+SETUVAR fish_pager_color_prefix:\x2d\x2d\x1edadada
+SETUVAR fish_pager_color_progress:\x2d\x2d\x1e8fcdf4
+SETUVAR fish_pager_color_selected_background:\x2d\x2d\x1e\x2d\x2dbackground\x3d11191b
 SETUVAR fish_user_paths:/home/aditya/\x2espicetify

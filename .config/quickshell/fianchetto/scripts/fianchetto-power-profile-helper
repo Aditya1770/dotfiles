@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -eu
+
+profile_file=/sys/firmware/acpi/platform_profile
+profile=${1:-}
+
+[ "$(id -u)" -eq 0 ] || {
+    printf '%s\n' "Fianchetto: privileged helper must run through pkexec." >&2
+    exit 1
+}
+
+case "$profile" in
+    low-power|quiet|balanced|balanced-performance|performance) ;;
+    *)
+        printf '%s\n' "Fianchetto: unsupported performance profile." >&2
+        exit 2
+        ;;
+esac
+
+[ -w "$profile_file" ] || {
+    printf 'Fianchetto: profile control is unavailable: %s\n' "$profile_file" >&2
+    exit 1
+}
+
+printf '%s' "$profile" > "$profile_file"

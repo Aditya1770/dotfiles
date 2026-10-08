@@ -3,6 +3,7 @@
 set -eu
 
 profile_file=/sys/firmware/acpi/platform_profile
+privileged_helper=/usr/local/libexec/fianchetto-power-profile
 
 case "${1:-get}" in
     detect)
@@ -43,6 +44,8 @@ case "${1:-get}" in
 
         if [ -w "$profile_file" ]; then
             printf '%s' "$profile" > "$profile_file"
+        elif [ -x "$privileged_helper" ]; then
+            pkexec "$privileged_helper" "$profile" >/dev/null
         else
             printf '%s' "$profile" | pkexec /usr/bin/tee "$profile_file" >/dev/null
         fi

@@ -10,11 +10,15 @@ Singleton {
     property bool microphoneMuted: false
     property real pendingVolume: 0
     property bool initialized: false
+    property bool localAdjustmentActive: false
+    readonly property real maximumVolume: 1.5
 
     function setVolume(value) {
-        const clamped = Math.max(0, Math.min(1, value))
+        const clamped = Math.max(0, Math.min(maximumVolume, value))
         volume = clamped
         pendingVolume = clamped
+        localAdjustmentActive = true
+        adjustmentSettleTimer.restart()
         OsdState.show("volume", clamped, muted)
         writeTimer.restart()
     }
@@ -35,8 +39,12 @@ Singleton {
     function readOutput(data) {
         const match = data.match(/Volume:\s+([0-9.]+)/)
         if (match) {
-            const nextVolume = Number(match[1])
+            const nextVolume = Math.min(maximumVolume, Number(match[1]))
             const nextMuted = data.includes("MUTED")
+            if (localAdjustmentActive) {
+                initialized = true
+                return
+            }
             if (initialized && (Math.abs(nextVolume - volume) > 0.005 || nextMuted !== muted))
                 OsdState.show("volume", nextVolume, nextMuted)
             volume = nextVolume
@@ -65,8 +73,16 @@ Singleton {
         interval: 40
         onTriggered: {
             if (setter.running) { restart(); return }
-            setter.command = ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", root.pendingVolume.toFixed(2)]
+            setter.command = ["wpctl", "set-volume", "--limit", root.maximumVolume.toFixed(1), "@DEFAULT_AUDIO_SINK@", root.pendingVolume.toFixed(2)]
             setter.running = true
+        }
+    }
+    Timer {
+        id: adjustmentSettleTimer
+        interval: 240
+        onTriggered: {
+            root.localAdjustmentActive = false
+            if (!reader.running) reader.running = true
         }
     }
     Timer { interval: 2000; running: true; repeat: true; onTriggered: if (!reader.running) reader.running = true }

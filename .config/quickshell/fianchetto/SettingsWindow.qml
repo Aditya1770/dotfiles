@@ -126,6 +126,7 @@ FloatingWindow {
                             { key: "appearance", label: "Appearance", icon: "󰏘" },
                             { key: "control", label: "Control Center", icon: "󰒓" },
                             { key: "bar", label: "Bar", icon: "󰍜" },
+                            { key: "launcher", label: "Launcher", icon: "󰍉" },
                             { key: "osd", label: "OSD", icon: "󰕾" },
                             { key: "notifications", label: "Notifications", icon: "󰂚" },
                             { key: "wifi", label: "Wi‑Fi", icon: "󰤨" },
@@ -194,6 +195,7 @@ FloatingWindow {
                             text: root.page === "appearance" ? "Theme and Appearance"
                                 : root.page === "control" ? "Control Center"
                                 : root.page === "bar" ? "Bar"
+                                : root.page === "launcher" ? "Launcher"
                                 : root.page === "osd" ? "OSD"
                                 : root.page === "notifications" ? "Notifications"
                                 : root.page === "wifi" ? "Wi‑Fi"
@@ -206,6 +208,7 @@ FloatingWindow {
                             text: root.page === "appearance" ? "Colours, typography and scale across the shell"
                                 : root.page === "control" ? "Choose what appears and where the action panel sits"
                                 : root.page === "bar" ? "Size and launcher presentation"
+                                : root.page === "launcher" ? "Choose how applications are ordered"
                                 : root.page === "osd" ? "Position, spacing and interaction"
                                 : root.page === "notifications" ? "Toast position and distance from the screen edge"
                                 : root.page === "wifi" ? "Wireless status and controls"
@@ -241,7 +244,9 @@ FloatingWindow {
                                                 { id: "fianchetto", name: "Fianchetto", bg: "#070B0D", accent: "#67B0E8" },
                                                 { id: "oled", name: "OLED", bg: "#000000", accent: "#7BC8F6" },
                                                 { id: "slate", name: "Slate", bg: "#0B1013", accent: "#8AB4D6" },
-                                                { id: "matugen", name: "Matugen", bg: "#101418", accent: "#8FCDF4" }
+                                                { id: "matugen", name: "Matugen",
+                                                    bg: ShellSettings.scheme === "matugen" ? Theme.background : "#101418",
+                                                    accent: ShellSettings.scheme === "matugen" ? Theme.blue : "#8FCDF4" }
                                             ].concat(ThemeManager.themes)
                                             Rectangle {
                                                 required property var modelData
@@ -335,7 +340,7 @@ FloatingWindow {
                             }
                             Rectangle {
                                 Layout.fillWidth: true
-                                implicitHeight: 202
+                                implicitHeight: 268
                                 radius: 20
                                 color: Theme.surfaceHover
                                 ColumnLayout {
@@ -348,7 +353,7 @@ FloatingWindow {
                                         MaterialButton {
                                             label: ThemeManager.syncingApps ? "Applying…" : "Apply now"
                                             accent: Theme.pastelSky
-                                            onClicked: ThemeManager.syncIntegrations()
+                                            onClicked: ThemeManager.syncIntegrations(true)
                                         }
                                     }
                                     BarText {
@@ -359,8 +364,10 @@ FloatingWindow {
                                     Repeater {
                                         model: [
                                             { label: "Kitty", key: "syncKittyTheme", accent: Theme.pastelSky },
+                                            { label: "Fish", key: "syncFishTheme", accent: Theme.pastelButter },
                                             { label: "Hyprland", key: "syncHyprlandTheme", accent: Theme.pastelLilac },
-                                            { label: "Spicetify Text", key: "syncSpicetifyTheme", accent: Theme.pastelMint }
+                                            { label: "Spicetify", key: "syncSpicetifyTheme", accent: Theme.pastelMint },
+                                            { label: "Neovim", key: "syncNeovimTheme", accent: Theme.pastelSky }
                                         ]
                                         RowLayout {
                                             required property var modelData
@@ -621,6 +628,23 @@ FloatingWindow {
                                     anchors.right: parent.right; anchors.rightMargin: 16; anchors.verticalCenter: parent.verticalCenter
                                     checked: ShellSettings.notificationShadow; accent: Theme.pastelSky
                                     onToggled: checked => ShellSettings.notificationShadow = checked
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true; implicitHeight: 66; radius: 17; color: Theme.surfaceHover
+                                ColumnLayout {
+                                    anchors.left: parent.left; anchors.leftMargin: 16
+                                    anchors.right: reminderSwitch.left; anchors.rightMargin: 14
+                                    anchors.verticalCenter: parent.verticalCenter; spacing: 2
+                                    BarText { text: "Calendar event reminders"; font.pixelSize: 14 }
+                                    BarText { text: "Notify once on each event's date"; color: Theme.muted; font.pixelSize: 11 }
+                                }
+                                MaterialSwitch {
+                                    id: reminderSwitch
+                                    anchors.right: parent.right; anchors.rightMargin: 16; anchors.verticalCenter: parent.verticalCenter
+                                    checked: ShellSettings.calendarEventNotifications; accent: Theme.pastelLilac
+                                    onToggled: checked => ShellSettings.calendarEventNotifications = checked
                                 }
                             }
 
@@ -997,6 +1021,49 @@ FloatingWindow {
                         }
 
                         ColumnLayout {
+                            visible: root.page === "launcher"
+                            Layout.fillWidth: true
+                            spacing: 12
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: 96
+                                radius: 18
+                                color: Theme.surfaceHover
+
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 16
+                                    spacing: 10
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 12
+                                        IconText { text: "󰓅"; color: Theme.pastelSky; font.pixelSize: 21 }
+                                        ColumnLayout {
+                                            Layout.fillWidth: true
+                                            spacing: 2
+                                            BarText { text: "Most used first"; font.pixelSize: 15 }
+                                            BarText {
+                                                Layout.fillWidth: true
+                                                text: ShellSettings.launcherSortMode === "usage"
+                                                    ? "Learns from launches; ties are alphabetical"
+                                                    : "Applications are sorted alphabetically"
+                                                color: Theme.muted
+                                                font.pixelSize: 11
+                                            }
+                                        }
+                                        MaterialSwitch {
+                                            checked: ShellSettings.launcherSortMode === "usage"
+                                            accent: Theme.pastelSky
+                                            onToggled: checked => ShellSettings.launcherSortMode = checked ? "usage" : "name"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        ColumnLayout {
                             visible: root.page === "wifi"
                             Layout.fillWidth: true
                             spacing: 10
@@ -1145,13 +1212,27 @@ FloatingWindow {
                         Rectangle {
                             visible: root.page === "media"
                             Layout.fillWidth: true
-                            implicitHeight: 178
+                            implicitHeight: 242
                             radius: 17
                             color: Theme.surfaceHover
                             ColumnLayout {
                                 anchors.fill: parent
                                 anchors.margins: 16
                                 spacing: 12
+                                Item {
+                                    Layout.fillWidth: true; Layout.preferredHeight: 42
+                                    ColumnLayout {
+                                        anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 2
+                                        BarText { text: "Scroll to change track"; font.pixelSize: 14 }
+                                        BarText { text: "Scroll up for next, down for previous"; color: Theme.muted; font.pixelSize: 11 }
+                                    }
+                                    MaterialSwitch {
+                                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                                        checked: ShellSettings.mediaScrollTrackChange; accent: Theme.pastelMint
+                                        onToggled: checked => ShellSettings.mediaScrollTrackChange = checked
+                                    }
+                                }
                                 Item {
                                     Layout.fillWidth: true; Layout.preferredHeight: 42
                                     ColumnLayout {

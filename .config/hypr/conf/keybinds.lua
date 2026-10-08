@@ -1,5 +1,5 @@
 local mainMod = "SUPER"
-local browser = "brave"
+local browser = "zen-browser"
 
 -- Applications
 hl.bind(mainMod .. " + Return",
